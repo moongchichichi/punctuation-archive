@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>문장부호 인식</title>
+<style>
+  body {
+    margin: 0;
+    background: white;
+    font-family: serif;
+    overflow: hidden;
+  }
+
+  canvas {
+    position: fixed;
+    left: 0;
+    top: 0;
+    display: block;
+    z-index: 5;
+    background: transparent;
+    pointer-events: none;
+  }
+
+  #result {
+    position: fixed;
+    right: 20px;
+    top: 20px;
+    width: 1000px;
+    max-height: 100vh;
+    max-height: calc(100vh - 40px);
+    overflow: auto;
+    background: white;
+    color: black;
+    border: 0;
+    padding: 16px;
+    font-size: 20px;
+    line-height: 1.8;
+    font-weight: 400;
+    z-index: 1;
+    pointer-events: auto;
+  }
+
+  #guide {
+    position: fixed;
+    left: 20px;
+    top: 20px;
+    color: #777;
+    font-size: 14px;
+    line-height: 1.8;
+    z-index: 10;
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+
+<div id="guide"></div>
+
+<canvas id="c"></canvas>
+<div id="result">마우스로 그려보세요</div>
+
+<script>
+const SPREADSHEET_ID = "1lgA52QAg3-tIM07LVgSJVRmOwjbXmUeWfJ1xou-IE2Y";
+const GID = "2070526780";
+const CSV_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/export?format=csv&gid=${GID}`;
+
+const K = {
+  name: "이름",
+  cat: "분류"
+};
+
+const canvas = document.getElementById("c");
+const ctx = canvas.getContext("2d");
+
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+
+resizeCanvas();
+
+let drawing = false;
+let points = [];
+let sheetRows = [];
+
+window.addEventListener("resize", resizeCanvas);
+
+/* ================= CSV ================= */
+function parseCSV(text) {
+  const rows = [];
+  let row = [];
+  let cur = "";
+  let quote = false;
+
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    const next = text[i + 1];
+
+    if (ch === '"' && quote && next === '"') {
+      cur += '"';
+      i++;
+    } else if (ch === '"') {
+      quote = !quote;
+    } else if (ch === "," && !quote) {
+      row.push(cur);
+      cur = "";
+    } else if ((ch === "\n" || ch === "\r") && !quote) {
+      if (cur || row.length) {
+        row.push(cur);
+        rows.push(row);
+        row = [];
+        cur = "";
+      }
+      if (ch === "\r" && next === "\n") i++;
+    } else {
+      cur += ch;
+    }
+  }
+
+  if (cur || row.length) {
+    row.push(cur);
+    rows.push(row);
+  }
+
+  const headers = rows.shift();
+
+  return rows.map(r =>
+    Object.fromEntries(
+      headers.map((h, i) => [h.trim(), r[i]?.trim() || ""])
+    )
+  );
+}
+
+async function loadSheet() {
+  const csvText = await fetch(CSV_URL).then(r => r.text());
+  sheetRows = parseCSV(csvText);
+}
+
+loadSheet();
+
+/* ================= DRAW ================= */
+window.addEventListener("mousedown", e => {
+  drawing = true;
+  points = [];
+
+  // 다음 획을 시작할 때만 이전 그림 삭제
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  addPoint(e);
+});
+
+window.addEventListener("mousemove", e => {
+  if (!drawing) return;
+  addPoint(e);
+  drawLine();
+});
+
+window.addEventListener("mouseup", () => {
+  if (!drawing) return;
+  drawing = false;
+  recognizeShape();
+});
+
+window.addEventListener("mouseleave", () => {
+  if (!drawing) return;
+  drawing = false;
+  recognizeShape();
+});
+
+function addPoint(e) {
+  points.push({
+    x: e.clientX,
+    y: e.clientY
+  });
+}
+
+function drawLine() {
+  if (points.length < 2) return;
+
+  const a = points[points.length - 2];
+  const b = points[points.length - 1];
+
+  ctx.beginPath();
+  ctx.moveTo(a.x, a.y);
+  ctx.lineTo(b.x, b.y);
+  ctx.strokeStyle = "black";
+  ctx.lineWidth = 5;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.stroke();
+}
+
+/* ================= SHAPE ANALYSIS ================= */
+function distance(a, b) {
+  return Math.hypot(a.x - b.x, a.y - b.y);
+}
+
+function pathLength() {
+  let len = 0;
+
+  for (let i = 1; i < points.length; i++) {
+    len += distance(points[i - 1], points[i]);
+  }
+
+  return len;
+}
+
+function getBounds() {
+  let minX = Infinity;
+  let maxX = -Infinity;
+  let minY = Infinity;
+  let maxY = -Infinity;
+
+  points.forEach(p => {
+    minX = Math.min(minX, p.x);
+    maxX = Math.max(maxX, p.x);
+    minY = Math.min(minY, p.y);
+    maxY = Math.max(maxY, p.y);
+  });
+
+  return {
+    minX,
+    maxX,
+    minY,
+    maxY,
+    width: maxX - minX,
+    height: maxY - minY
+  };
+}
+
+function recognizeShape() {
+  if (points.length < 2) return;
+
+  const start = points[0];
+  const end = points[points.length - 1];
+  const len = pathLength();
+  const closeDist = distance(start, end);
+  const box = getBounds();
+
+  const width = box.width;
+  const height = box.height;
+
+  let keyword = "";
+
+  if (len < 90 && width < 90 && height < 90) {
+    keyword = "구두";
+  }
+
+  else if (
+    closeDist < 80 &&
+    len > 120 &&
+    width > 40 &&
+    height > 40 &&
+    Math.abs(width - height) < 80
+  ) {
+    keyword = "권표";
+  }
+
+  else if (
+    width > 70 &&
+    len > 70 &&
+    closeDist > 70 &&
+    height > 12 &&
+    height < width * 0.5
+  ) {
+    const quarter = points[Math.floor(points.length * 0.25)];
+    const middle  = points[Math.floor(points.length * 0.5)];
+    const threeQ  = points[Math.floor(points.length * 0.75)];
+
+    const curveSpread =
+      Math.abs(middle.y - quarter.y) +
+      Math.abs(middle.y - threeQ.y);
+
+    if (curveSpread > 10) {
+      keyword = "괄호";
+    }
+  }
+
+  if (keyword) {
+    handleResult(keyword);
+  } else {
+    showList([], "인식 실패");
+  }
+}
+
+/* ================= FILTER RESULT ================= */
+function handleResult(keyword) {
+  const filtered = sheetRows.filter(row =>
+    (row[K.cat] || "").includes(keyword)
+  );
+
+  showList(filtered, keyword);
+}
+
+function showList(list, keyword) {
+  const panel = document.getElementById("result");
+
+  panel.innerHTML = `${keyword}<br><br>`;
+
+  if (!list.length) {
+    panel.innerHTML += "결과 없음";
+    return;
+  }
+
+  list.forEach((item, i) => {
+    panel.innerHTML += `${i + 1}. ${item[K.name]}<br>`;
+  });
+}
+</script>
+
+</body>
+</html>
