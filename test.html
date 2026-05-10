@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<title>문장부호 인식 + 카메라 손 드로잉</title>
+<title>문장부호 인식 + 카메라 드로잉</title>
 
 <style>
 * {
@@ -19,10 +19,6 @@ body {
   overflow: hidden;
 }
 
-body.camera-mode {
-  background: white;
-}
-
 canvas {
   position: fixed;
   left: 0;
@@ -32,32 +28,27 @@ canvas {
 
 #webcam {
   position: fixed;
-  left: -9999px;
-  top: -9999px;
-  width: 1px;
-  height: 1px;
-  opacity: 0;
-  pointer-events: none;
-}
-
-#bgCanvas {
-  z-index: 0;
-  background: white;
-}
-
-#handCanvas {
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover;
+  transform: scaleX(-1);
   z-index: 1;
-  pointer-events: none;
-  background: transparent;
   display: none;
+  opacity: 0.75;
 }
 
-body.camera-mode #handCanvas {
+body.camera-mode #webcam {
   display: block;
 }
 
 body.camera-mode #bgCanvas {
   display: none;
+}
+
+#bgCanvas {
+  z-index: 0;
+  background: white;
 }
 
 #drawCanvas {
@@ -73,83 +64,32 @@ body.camera-mode #bgCanvas {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   padding: 0 20px 80px;
-  background: transparent;
-  mix-blend-mode: noemal;
+  background: rgba(255, 255, 255, 0.12);
+  mix-blend-mode: multiply;
   touch-action: none;
 }
 
-#menuWrap {
+#cameraBtn {
   position: fixed;
   right: 20px;
   top: 20px;
-  z-index: 40;
-  font-family: Arial, sans-serif;
-}
-
-#menuIcon {
-  width: 48px;
-  height: 48px;
-  border: 1px solid black;
-  background: white;
-  color: black;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: "Times New Roman", "Didot", "Bodoni 72", serif;
-  font-size: 34px;
-  line-height: 1;
-  cursor: pointer;
-  transition: transform 0.35s ease, background 0.25s ease, color 0.25s ease;
-}
-
-#menuWrap:hover #menuIcon,
-#menuWrap.open #menuIcon {
-  transform: rotate(180deg);
-  background: black;
-  color: white;
-}
-
-#menuPanel {
-  position: absolute;
-  right: 0;
-  top: 56px;
-  width: 245px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(-10px);
-  transition: opacity 0.25s ease, transform 0.25s ease;
-}
-
-#menuWrap:hover #menuPanel,
-#menuWrap.open #menuPanel {
-  opacity: 1;
-  pointer-events: auto;
-  transform: translateY(0);
-}
-
-#menuPanel button {
+  z-index: 30;
   border: 1px solid black;
   background: white;
   color: black;
   font-family: Arial, sans-serif;
-  font-size: 13px;
-  padding: 9px 12px;
+  font-size: 14px;
+  padding: 10px 14px;
   cursor: pointer;
-  text-align: left;
-}
-
-#menuPanel button:hover,
-#menuPanel button.active {
-  background: black;
-  color: white;
 }
 
 #cameraGuide {
-  width: 245px;
-  background: rgba(255,255,255,0.92);
+  position: fixed;
+  right: 20px;
+  top: 66px;
+  z-index: 30;
+  width: 230px;
+  background: rgba(255,255,255,0.9);
   border: 1px solid black;
   padding: 10px;
   font-family: Arial, sans-serif;
@@ -171,7 +111,7 @@ body.camera-mode #cameraGuide {
 
 .top-nav span {
   font-size: clamp(60px, 10vw, 180px);
-  line-height: 1;
+  line-height: 0.85;
   letter-spacing: -0.02em;
   font-weight: 100;
 }
@@ -187,18 +127,12 @@ body.camera-mode #cameraGuide {
 }
 
 .keyword-header {
-  position: sticky;
-  top: 0;
-  z-index: 9999;
   display: grid;
-  grid-template-columns: 38% minmax(140px, 28vw) 1fr;
+  grid-template-columns: 38% minmax(140px, 28vw);
   align-items: center;
   border-bottom: 1px solid black;
   min-height: 92px;
   pointer-events: none;
-  background: transparent;
-  backdrop-filter: blur(3px);
-  mix-blend-mode: normal;
 }
 
 .keyword-title {
@@ -232,7 +166,7 @@ body.camera-mode #cameraGuide {
   display: flex;
   align-items: center;
   overflow: hidden;
-  background: transparent;
+  background: rgba(255,255,255,0.72);
   color: black;
   padding: 0 8px;
   font-size: clamp(32px, 2.5vw, 32px);
@@ -291,25 +225,10 @@ body.camera-mode #cameraGuide {
 }
 
 .detail-inner img {
-  width: 200%;
-  z-index: 20;
-  max-height: 600px;
-  object-fit: contain;
-  background: white;
-  filter: grayscale(0) contrast(1) brightness(1);
-  border: 1px solid rgba(0,0,0,0.22);
-}
-
-.no-image {
   width: 100%;
-  min-height: 160px;
-  border: 1px solid black;
-  background: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: Arial, sans-serif;
-  font-size: 13px;
+  max-height: 260px;
+  object-fit: cover;
+  filter: grayscale(1) contrast(1.2);
 }
 
 .detail-text {
@@ -319,7 +238,9 @@ body.camera-mode #cameraGuide {
   letter-spacing: -0.02em;
   user-select: text;
   -webkit-user-select: text;
+}
 
+.result-item.open .detail-text {
   writing-mode: vertical-rl;
   text-orientation: mixed;
   height: 320px;
@@ -328,57 +249,14 @@ body.camera-mode #cameraGuide {
 }
 
 .detail-text div {
+  border-bottom: 1px solid rgba(0,0,0,0.35);
+  padding: 0;
+}
+
+.result-item.open .detail-text div {
   border-bottom: none;
   border-left: 0px solid rgba(0,0,0,0.35);
   padding: 0 3px;
-}
-
-.grid-wrap {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 18px;
-  padding: 22px 0 60px;
-}
-
-.grid-card {
-  border: 1px solid black;
-  background: rgba(255,255,255,0.85);
-  cursor: pointer;
-  min-height: 220px;
-  display: flex;
-  flex-direction: column;
-}
-
-.grid-card img {
-  width: 100%;
-  height: 160px;
-  object-fit: contain;
-  background: white;
-  filter: grayscale(1) contrast(1.2);
-  border-bottom: 1px solid black;
-}
-
-.grid-card .no-image {
-  height: 160px;
-  min-height: 160px;
-  border: none;
-  border-bottom: 1px solid black;
-}
-
-.grid-name {
-  font-family: Arial, sans-serif;
-  font-size: 15px;
-  line-height: 1.1;
-  padding: 8px;
-  word-break: keep-all;
-}
-
-.grid-cat {
-  font-family: Arial, sans-serif;
-  font-size: 12px;
-  line-height: 1.1;
-  padding: 0 8px 8px;
-  opacity: 0.7;
 }
 
 .fail {
@@ -397,30 +275,20 @@ body.camera-mode #cameraGuide {
 <video id="webcam" autoplay playsinline muted></video>
 
 <canvas id="bgCanvas"></canvas>
-<canvas id="handCanvas"></canvas>
 <canvas id="drawCanvas"></canvas>
 
-<div id="menuWrap">
-  <div id="menuIcon" aria-label="메뉴 열기" role="button" tabindex="0">◎</div>
-  <div id="menuPanel">
-    <button id="cameraBtn">CAMERA DRAW</button>
-    <button id="drawBtn">DRAW MODE</button>
-    <button id="allBtn">ALL ITEMS</button>
-    <button id="viewBtn">GRID VIEW</button>
-    <button class="filterBtn" data-filter="구두">구두</button>
-    <button class="filterBtn" data-filter="권표">권표</button>
-    <button class="filterBtn" data-filter="괄호">괄호</button>
-    <div id="cameraGuide">
-      검지와 중지를 붙이면 그리기 시작<br>
-      두 손가락을 떼면 인식/검색 완료<br><br>
-      흰 배경 위에 손과 손끝만 표시됩니다.
-    </div>
-  </div>
+<button id="cameraBtn">CAMERA DRAW</button>
+<div id="cameraGuide">
+  엄지와 검지를 붙이면 그리기 시작<br>
+  손가락을 떼면 인식 실행<br><br>
+  점 = 구두<br>
+  원 = 권표<br>
+  가로 곡선 = 괄호
 </div>
 
 <div id="result">
   <div class="top-nav">
-    <span>(。● ○ ◎ ◉ ) </span>
+    <span>(。。。。。。。) ● ○ ◎ ◉ </span>
   </div>
   <div class="empty-state">DRAW MODE</div>
 </div>
@@ -450,45 +318,10 @@ const IMAGE_COUNT = 260;
 const IMAGE_LOAD_COUNT = 100;
 
 const video = document.getElementById("webcam");
-const menuWrap = document.getElementById("menuWrap");
-const menuIcon = document.getElementById("menuIcon");
 const cameraBtn = document.getElementById("cameraBtn");
-const drawBtn = document.getElementById("drawBtn");
-const allBtn = document.getElementById("allBtn");
-const viewBtn = document.getElementById("viewBtn");
-const filterBtns = document.querySelectorAll(".filterBtn");
-
-function toggleMenu() {
-  menuWrap.classList.toggle("open");
-}
-
-function closeMenu() {
-  menuWrap.classList.remove("open");
-}
-
-menuIcon.addEventListener("click", e => {
-  e.stopPropagation();
-  toggleMenu();
-});
-
-menuIcon.addEventListener("keydown", e => {
-  if (e.key === "Enter" || e.key === " ") {
-    e.preventDefault();
-    toggleMenu();
-  }
-});
-
-menuWrap.addEventListener("click", e => {
-  e.stopPropagation();
-});
-
-document.addEventListener("click", closeMenu);
 
 const bgCanvas = document.getElementById("bgCanvas");
 const bgCtx = bgCanvas.getContext("2d");
-
-const handCanvas = document.getElementById("handCanvas");
-const handCtx = handCanvas.getContext("2d");
 
 const canvas = document.getElementById("drawCanvas");
 const ctx = canvas.getContext("2d");
@@ -504,15 +337,10 @@ let cameraMode = false;
 let cameraReady = false;
 let handLandmarker = null;
 let lastVideoTime = -1;
-let gridMode = false;
-let currentList = [];
-let currentKeyword = "";
 
 function resizeCanvas() {
   bgCanvas.width = window.innerWidth;
   bgCanvas.height = window.innerHeight;
-  handCanvas.width = window.innerWidth;
-  handCanvas.height = window.innerHeight;
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
 
@@ -570,24 +398,10 @@ function parseCSV(text) {
 function extractImageUrls(value) {
   if (!value) return [];
 
-  const raw = String(value);
-  const urls = raw.match(/https?:\/\/[^\s,"')]+/g);
-  if (urls) return urls.map(v => v.trim());
-
-  return raw
+  return value
     .split(/\s*,\s*|\s*\n\s*/)
     .map(v => v.trim())
     .filter(v => v.startsWith("http"));
-}
-
-function getPunctuationImage(item) {
-  const punctuationImages = extractImageUrls(item[K.sym]);
-  if (punctuationImages.length) return punctuationImages[0];
-
-  const fallbackImages = extractImageUrls(item[K.img]);
-  if (fallbackImages.length) return fallbackImages[0];
-
-  return "";
 }
 
 function loadImage(src) {
@@ -670,9 +484,10 @@ function addNoise() {
   bgCtx.putImageData(imgData, 0, 0);
 }
 
+/* 마우스 / 터치 드로잉 */
 result.addEventListener("pointerdown", e => {
   if (cameraMode) return;
-  if (e.target.closest(".result-name, .plus, .result-detail, .grid-card")) return;
+  if (e.target.closest(".result-name, .plus, .result-detail")) return;
 
   e.preventDefault();
 
@@ -711,9 +526,15 @@ result.addEventListener("pointercancel", () => {
 
 function addPoint(input, y) {
   if (typeof input === "number") {
-    points.push({ x: input, y: y });
+    points.push({
+      x: input,
+      y: y
+    });
   } else {
-    points.push({ x: input.clientX, y: input.clientY });
+    points.push({
+      x: input.clientX,
+      y: input.clientY
+    });
   }
 }
 
@@ -726,7 +547,7 @@ function drawLine() {
   ctx.beginPath();
   ctx.moveTo(a.x, a.y);
   ctx.lineTo(b.x, b.y);
-  ctx.strokeStyle = "black";
+  ctx.strokeStyle = cameraMode ? "red" : "black";
   ctx.lineWidth = cameraMode ? 8 : 6;
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
@@ -842,18 +663,10 @@ function escapeHTML(str) {
     .replaceAll("'", "&#039;");
 }
 
-function imageHTML(src, alt = "") {
-  if (!src) return `<div class="no-image">NO PUNCTUATION IMAGE</div>`;
-  return `<img src="${escapeHTML(src)}" alt="${escapeHTML(alt)}" loading="lazy" referrerpolicy="no-referrer">`;
-}
-
 function showList(list, keyword) {
-  currentList = list;
-  currentKeyword = keyword;
-
   let html = `
     <div class="top-nav">
-      <span>(。● ○ ◎ ◉ )</span>
+      <span>(。。。。。。。) ● ○ ◎ ◉ </span>
     </div>
   `;
 
@@ -880,18 +693,8 @@ function showList(list, keyword) {
     </div>
   `;
 
-  html += gridMode ? renderGrid(list) : renderRows(list);
-
-  result.innerHTML = html;
-  bindResultRows();
-  if (!cameraMode) drawRandomBackground();
-}
-
-function renderRows(list) {
-  let html = "";
-
   list.forEach(item => {
-    const img = getPunctuationImage(item);
+    const img = extractImageUrls(item[K.img])[0] || "";
 
     html += `
       <div class="result-item">
@@ -902,7 +705,7 @@ function renderRows(list) {
 
         <div class="result-detail">
           <div class="detail-inner">
-            ${imageHTML(img, item[K.name])}
+            ${img ? `<img src="${escapeHTML(img)}">` : ""}
             <div class="detail-text">
               <div><b>이름</b> ${escapeHTML(item[K.name])}</div>
               <div><b>분류</b> ${escapeHTML(item[K.cat])}</div>
@@ -917,26 +720,9 @@ function renderRows(list) {
     `;
   });
 
-  return html;
-}
-
-function renderGrid(list) {
-  let html = `<div class="grid-wrap">`;
-
-  list.forEach(item => {
-    const img = getPunctuationImage(item);
-
-    html += `
-      <div class="grid-card">
-        ${imageHTML(img, item[K.name])}
-        <div class="grid-name">${escapeHTML(item[K.name])}</div>
-        <div class="grid-cat">${escapeHTML(item[K.cat])}</div>
-      </div>
-    `;
-  });
-
-  html += `</div>`;
-  return html;
+  result.innerHTML = html;
+  bindResultRows();
+  if (!cameraMode) drawRandomBackground();
 }
 
 function bindResultRows() {
@@ -946,106 +732,40 @@ function bindResultRows() {
       el.closest(".result-item").classList.toggle("open");
     });
   });
-
-  document.querySelectorAll(".grid-card").forEach((el, index) => {
-    el.addEventListener("click", e => {
-      e.stopPropagation();
-      gridMode = false;
-      viewBtn.textContent = "GRID VIEW";
-      showList([currentList[index]], currentList[index][K.name] || "상세 보기");
-      document.querySelector(".result-item")?.classList.add("open");
-    });
-  });
 }
 
-function resetToDrawMode() {
-  currentList = [];
-  currentKeyword = "";
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  result.innerHTML = `
-    <div class="top-nav">
-      <span>(。● ○ ◎ ◉ )</span>
-    </div>
-    <div class="empty-state">DRAW MODE</div>
-  `;
-  if (!cameraMode) drawRandomBackground();
-}
-
-function setCameraMode(nextMode) {
-  cameraMode = nextMode;
+/* 카메라 손끝 드로잉 */
+cameraBtn.addEventListener("click", async () => {
+  cameraMode = !cameraMode;
   document.body.classList.toggle("camera-mode", cameraMode);
 
   if (cameraMode) {
     cameraBtn.textContent = "MOUSE DRAW";
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    handCtx.clearRect(0, 0, handCanvas.width, handCanvas.height);
     points = [];
     drawing = false;
 
     if (!cameraReady) {
-      setupCameraAndTracking();
+      await setupCamera();
+      await setupHandTracking();
+      cameraReady = true;
+      requestAnimationFrame(cameraLoop);
     }
   } else {
     cameraBtn.textContent = "CAMERA DRAW";
     drawing = false;
     points = [];
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    handCtx.clearRect(0, 0, handCanvas.width, handCanvas.height);
     drawRandomBackground();
   }
-}
-
-cameraBtn.addEventListener("click", () => {
-  setCameraMode(!cameraMode);
-  closeMenu();
 });
-
-drawBtn.addEventListener("click", () => {
-  setCameraMode(false);
-  resetToDrawMode();
-  closeMenu();
-});
-
-allBtn.addEventListener("click", () => {
-  setCameraMode(false);
-  showList(sheetRows, "전체 보기");
-  closeMenu();
-});
-
-viewBtn.addEventListener("click", () => {
-  gridMode = !gridMode;
-  viewBtn.textContent = gridMode ? "LIST VIEW" : "GRID VIEW";
-
-  if (currentList.length) {
-    showList(currentList, currentKeyword || "전체 보기");
-  } else {
-    showList(sheetRows, "전체 보기");
-  }
-  closeMenu();
-});
-
-filterBtns.forEach(btn => {
-  btn.addEventListener("click", () => {
-    setCameraMode(false);
-    handleResult(btn.dataset.filter);
-    closeMenu();
-  });
-});
-
-async function setupCameraAndTracking() {
-  await setupCamera();
-  await setupHandTracking();
-  cameraReady = true;
-  requestAnimationFrame(cameraLoop);
-}
 
 async function setupCamera() {
   const stream = await navigator.mediaDevices.getUserMedia({
     video: {
       facingMode: "user",
-      width: { ideal: 640 },
-      height: { ideal: 360 },
-      frameRate: { ideal: 24, max: 30 }
+      width: 1280,
+      height: 720
     },
     audio: false
   });
@@ -1073,19 +793,16 @@ async function setupHandTracking() {
   });
 }
 
-let lastDetectTime = 0;
-const DETECT_INTERVAL = 1000 / 24;
-
-function cameraLoop(now) {
+function cameraLoop() {
   if (cameraMode && handLandmarker && video.readyState >= 2) {
-    if (
-      video.currentTime !== lastVideoTime &&
-      now - lastDetectTime > DETECT_INTERVAL
-    ) {
-      lastDetectTime = now;
+    if (video.currentTime !== lastVideoTime) {
       lastVideoTime = video.currentTime;
 
-      const handResult = handLandmarker.detectForVideo(video, now);
+      const handResult = handLandmarker.detectForVideo(
+        video,
+        performance.now()
+      );
+
       handleCameraHand(handResult);
     }
   }
@@ -1094,42 +811,36 @@ function cameraLoop(now) {
 }
 
 function handleCameraHand(handResult) {
-  handCtx.clearRect(0, 0, handCanvas.width, handCanvas.height);
-
   if (!handResult.landmarks || handResult.landmarks.length === 0) {
     if (drawing) finishCameraDrawing();
     return;
   }
 
   const hand = handResult.landmarks[0];
-  drawHandSkeleton(hand);
 
   const indexTip = hand[8];
-  const middleTip = hand[12];
+  const thumbTip = hand[4];
 
   const x = (1 - indexTip.x) * canvas.width;
   const y = indexTip.y * canvas.height;
 
-  const middleX = (1 - middleTip.x) * canvas.width;
-  const middleY = middleTip.y * canvas.height;
+  const thumbX = (1 - thumbTip.x) * canvas.width;
+  const thumbY = thumbTip.y * canvas.height;
 
-  const twoFingerDistance = Math.hypot(x - middleX, y - middleY);
-  const isDrawingGesture = twoFingerDistance < 58;
+  const pinchDistance = Math.hypot(x - thumbX, y - thumbY);
+  const isPinching = pinchDistance < 55;
 
-  drawCameraCursor(x, y, isDrawingGesture);
+  drawCameraCursor(x, y, isPinching);
 
-  if (isDrawingGesture) {
+  if (isPinching) {
     if (!drawing) {
       drawing = true;
       points = [];
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       addPoint(x, y);
     } else {
-      const last = points[points.length - 1];
-      if (!last || Math.hypot(x - last.x, y - last.y) > 8) {
-        addPoint(x, y);
-        drawLine();
-      }
+      addPoint(x, y);
+      drawLine();
     }
   } else {
     if (drawing) {
@@ -1138,59 +849,23 @@ function handleCameraHand(handResult) {
   }
 }
 
-function drawHandSkeleton(hand) {
-  const connections = [
-    [0,1],[1,2],[2,3],[3,4],
-    [0,5],[5,6],[6,7],[7,8],
-    [5,9],[9,10],[10,11],[11,12],
-    [9,13],[13,14],[14,15],[15,16],
-    [13,17],[17,18],[18,19],[19,20],
-    [0,17]
-  ];
-
-  handCtx.strokeStyle = "black";
-  handCtx.lineWidth = 3;
-  handCtx.lineCap = "round";
-  handCtx.lineJoin = "round";
-
-  connections.forEach(([a, b]) => {
-    const pa = hand[a];
-    const pb = hand[b];
-    const ax = (1 - pa.x) * handCanvas.width;
-    const ay = pa.y * handCanvas.height;
-    const bx = (1 - pb.x) * handCanvas.width;
-    const by = pb.y * handCanvas.height;
-
-    handCtx.beginPath();
-    handCtx.moveTo(ax, ay);
-    handCtx.lineTo(bx, by);
-    handCtx.stroke();
-  });
-
-  hand.forEach((p, i) => {
-    const x = (1 - p.x) * handCanvas.width;
-    const y = p.y * handCanvas.height;
-
-    handCtx.beginPath();
-    handCtx.arc(x, y, i === 8 || i === 12 ? 7 : 4, 0, Math.PI * 2);
-    handCtx.fillStyle = "black";
-    handCtx.fill();
-  });
-}
-
 function finishCameraDrawing() {
   drawing = false;
   recognizeShape();
 }
 
 function drawCameraCursor(x, y, active) {
-  handCtx.beginPath();
-  handCtx.arc(x, y, active ? 15 : 10, 0, Math.PI * 2);
-  handCtx.fillStyle = active ? "black" : "white";
-  handCtx.strokeStyle = "black";
-  handCtx.lineWidth = 3;
-  handCtx.fill();
-  handCtx.stroke();
+  if (drawing) return;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  ctx.beginPath();
+  ctx.arc(x, y, active ? 14 : 9, 0, Math.PI * 2);
+  ctx.fillStyle = active ? "red" : "white";
+  ctx.strokeStyle = "black";
+  ctx.lineWidth = 3;
+  ctx.fill();
+  ctx.stroke();
 }
 </script>
 
