@@ -37,7 +37,7 @@ body{
   pointer-events:none;
   z-index:9999;
   transform:translate(-50%,-50%);
-  transition:.18s ease;
+  transition:width .18s ease, height .18s ease, background .18s ease;
 }
 
 #cursor.big{
@@ -53,14 +53,12 @@ body{
   overflow:hidden;
 }
 
-/* 캔버스 */
 #canvas{
   position:absolute;
   inset:0;
   z-index:1;
 }
 
-/* 메뉴 */
 .menu{
   position:relative;
   z-index:5;
@@ -79,11 +77,11 @@ body{
   display:block;
   text-decoration:none;
   pointer-events:auto;
-  font-size:clamp(3rem,8vw,5rem);
+  font-size:clamp(2rem,8vw,2rem);
   font-weight:300;
-  line-height:1;
+  line-height:2;
   letter-spacing:-.08em;
-  color:#000000;
+  color:#000;
   mix-blend-mode:screen;
   transition:
     transform .4s cubic-bezier(.22,1,.36,1),
@@ -95,25 +93,92 @@ body{
   letter-spacing:-.04em;
 }
 
-/* 하단 설명 */
-.info{
+/* 하단 정보 전체 */
+.bottom-info{
   position:absolute;
   left:18px;
   bottom:16px;
   z-index:6;
-  width:min(720px,90vw);
-  font-size:.82rem;
-  line-height:1.2;
-  letter-spacing:-.03em;
+
+  display:grid;
+  grid-template-columns: 520px 930px;
+  gap:18px;
+  align-items:start;
+
+  height:50px;
+  overflow:hidden;
+
+  border-top:1px solid #000;
+
+
   color:#000;
+}
+
+/* 왼쪽 기본 설명 */
+.info{
+  width:520px;
+  height:72px;
+
+  font-size:.82rem;
+  line-height:1.6;
+  letter-spacing:-.03em;
+  padding-left:8px;
+  padding-top: 4px;
+  overflow:hidden;
+}
+
+/* 오른쪽 hover 설명 */
+.hover-info{
+  width:500px;
+  height:72px;
+
+  font-size:.82rem;
+  line-height:1.7;
+  letter-spacing:-.03em;
+
+  padding-top: 3px;
+
+  overflow:hidden;
+  word-break:keep-all;
+  overflow-wrap:break-word;
 }
 
 /* 모바일 */
 @media(max-width:760px){
-  body{ cursor:auto; }
-  #cursor{ display:none; }
-  .link{ font-size:clamp(3rem,15vw,5rem); }
-  .info{ left:10px; right:10px; bottom:10px; font-size:.72rem; }
+  body{
+    cursor:auto;
+  }
+
+  #cursor{
+    display:none;
+  }
+
+  .link{
+    font-size:clamp(3rem,15vw,5rem);
+  }
+
+  .bottom-info{
+    left:10px;
+    right:10px;
+    bottom:10px;
+
+    grid-template-columns: 1fr 120px;
+    gap:10px;
+
+    height:72px;
+  }
+
+  .info{
+    width:auto;
+    height:72px;
+    font-size:.72rem;
+  }
+
+  .hover-info{
+    width:300px;
+    height:72px;
+    font-size:.72rem;
+  }
 }
 </style>
 </head>
@@ -128,137 +193,219 @@ body{
 
   <nav class="menu">
     <a href="5.9.html" class="link" id="link1">서재탐색</a>
-    <a href="collage.html" class="link" id="link2">문장부호</a>
+    <a href="collage.html" class="link" id="link2">문장부호 검색</a>
   </nav>
 
-  <p class="info">
-    한국의 옛 문장부호 아카이브는 책 이미지와 문장부호를 함께 탐색하고,
-    문장부호 자체를 중심으로 분류·비교하는 온라인 타이포그래피 아카이브입니다.
-  </p>
+  <div class="bottom-info">
+    <p class="info">
+      한국의 옛 문장부호 아카이브는 책 이미지와 문장부호를 함께 탐색하고,<br>
+      문장부호 자체를 중심으로 분류·비교하는 온라인 타이포그래피 아카이브입니다.
+    </p>
+
+    <p class="hover-info" id="hoverInfo"></p>
+  </div>
 
 </main>
 
 <script>
 /* ── 커서 ── */
 const cursor = document.getElementById("cursor");
+
+let mouseX = 0;
+let mouseY = 0;
+let cursorBusy = false;
+
 window.addEventListener("mousemove", e => {
-  cursor.style.left = e.clientX + "px";
-  cursor.style.top  = e.clientY + "px";
-  cursor.classList.toggle("big", !!e.target.closest(".link"));
+  mouseX = e.clientX;
+  mouseY = e.clientY;
+
+  if (!cursorBusy) {
+    cursorBusy = true;
+
+    requestAnimationFrame(() => {
+      cursor.style.left = mouseX + "px";
+      cursor.style.top  = mouseY + "px";
+
+      const target = document.elementFromPoint(mouseX, mouseY);
+      cursor.classList.toggle("big", !!target?.closest(".link"));
+
+      cursorBusy = false;
+    });
+  }
+});
+
+/* ── 링크 호버 정보 ── */
+const hoverInfo = document.getElementById("hoverInfo");
+const link1 = document.getElementById("link1");
+const link2 = document.getElementById("link2");
+
+function setHoverInfo(text) {
+  hoverInfo.textContent = text;
+}
+
+link1.addEventListener("mouseenter", () => {
+  setHoverInfo("서재를 탐색하듯 책의 정보를 중심으로 구성되어 있습니다. 사용자는 책의 제목, 문장부호, 시대적 맥락을 따라가며 자료를 탐색할 수 있다.");
+});
+
+link2.addEventListener("mouseenter", () => {
+  setHoverInfo("문장부호의 형태를 직접 그려보며 탐색할 수 있습니다. 키워드 입력 대신 손으로 기호를 재현하는 행위는, 이전의 흔적과 필기 감각을 디지털 환경 안에서 다시 불러옵니다.");
+});
+
+link1.addEventListener("mouseleave", () => {
+  setHoverInfo("");
+});
+
+link2.addEventListener("mouseleave", () => {
+  setHoverInfo("");
 });
 
 /* ── 캔버스 설정 ── */
 const canvas = document.getElementById("canvas");
-const ctx    = canvas.getContext("2d");
+const ctx = canvas.getContext("2d", { alpha:true });
 
-const marks   = ["、","。","◇","◯","︵","︶","︷","︸"];
+const marks = ["、","。","◇","◯","︵","︶","︷","︸"];
+
 const FONT_SIZE = 22;
-const COL_W     = 32;   // 열 간격 (px)
-const ROW_H     = 32;   // 행 간격 (px)
-const BASE_SPEED = 1.8; // 기본 이동 속도 (px/frame)
+const COL_W = 40;
+const ROW_H = 40;
+const BASE_SPEED = 1.25;
+const DPR_LIMIT = 1.25;
 
+let dpr = 1;
 let cols, rows, grid, heads, forbidden;
+let resizeTimer = null;
 
-/* 메뉴 텍스트의 bounding rect + 여백을 금지 구역으로 반환 */
 function getForbiddenRects() {
-  const PAD = 15;
+  const PAD = 18;
+
   return ["link1","link2"]
     .map(id => document.getElementById(id))
     .filter(Boolean)
     .map(el => {
       const r = el.getBoundingClientRect();
-      return { x: r.left - PAD, y: r.top - PAD, w: r.width + PAD*2, h: r.height + PAD*2 };
+
+      return {
+        x: r.left - PAD,
+        y: r.top - PAD,
+        w: r.width + PAD * 2,
+        h: r.height + PAD * 2
+      };
     });
 }
 
-/* 셀 (col, row) 의 중심이 금지 구역 안에 있는지 */
 function isForbidden(c, r) {
   const px = c * COL_W + COL_W / 2;
   const py = r * ROW_H + ROW_H / 2;
+
   for (const rect of forbidden) {
-    if (px >= rect.x && px <= rect.x + rect.w &&
-        py >= rect.y && py <= rect.y + rect.h) return true;
+    if (
+      px >= rect.x &&
+      px <= rect.x + rect.w &&
+      py >= rect.y &&
+      py <= rect.y + rect.h
+    ) {
+      return true;
+    }
   }
+
   return false;
 }
 
 function randomMark() {
-  return marks[Math.floor(Math.random() * marks.length)];
+  return marks[(Math.random() * marks.length) | 0];
 }
 
-/* 전체 초기화 */
 function init() {
-  canvas.width  = window.innerWidth;
-  canvas.height = window.innerHeight;
-  cols     = Math.ceil(canvas.width  / COL_W) + 4;
-  rows     = Math.ceil(canvas.height / ROW_H);
+  dpr = Math.min(window.devicePixelRatio || 1, DPR_LIMIT);
+
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+
+  canvas.width = Math.floor(w * dpr);
+  canvas.height = Math.floor(h * dpr);
+  canvas.style.width = w + "px";
+  canvas.style.height = h + "px";
+
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  cols = Math.ceil(w / COL_W) + 3;
+  rows = Math.ceil(h / ROW_H);
+
   forbidden = getForbiddenRects();
 
-  grid  = [];
+  grid = [];
   heads = [];
 
   for (let r = 0; r < rows; r++) {
     grid[r] = [];
+
     for (let c = 0; c < cols; c++) {
       const blocked = isForbidden(c, r);
+
       grid[r][c] = {
-        char:    randomMark(),
-        base:    blocked ? 0 : (Math.random() * 0.18 + 0.05), // 기본 투명도
-        blocked: blocked
+        char: randomMark(),
+        base: blocked ? 0 : Math.random() * 0.12 + 0.04,
+        blocked
       };
     }
-    /* 각 행마다 타이핑 헤드를 랜덤 위치에서 시작 */
+
     heads.push({
-      row:   r,
-      x:     -Math.random() * cols * COL_W,       // 시작 x (화면 왼쪽 바깥)
-      speed: BASE_SPEED * (0.65 + Math.random() * 0.75)
+      row: r,
+      x: -Math.random() * cols * COL_W,
+      speed: BASE_SPEED * (0.65 + Math.random() * 0.65)
     });
   }
 }
 
 /* ── 메인 루프 ── */
 let lastTime = null;
+let frameSkip = 0;
 
 function draw(ts) {
+  requestAnimationFrame(draw);
+
+  frameSkip++;
+  if (frameSkip % 2 !== 0) return;
+
   if (!lastTime) lastTime = ts;
-  const dt = Math.min((ts - lastTime) / 16.67, 3); // 배속 상한
+
+  const dt = Math.min((ts - lastTime) / 16.67, 3);
   lastTime = ts;
 
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.font         = `300 ${FONT_SIZE}px "Noto Serif KR", serif`;
+  ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+
+  ctx.font = `300 ${FONT_SIZE}px "Noto Serif KR", serif`;
   ctx.textBaseline = "middle";
+  ctx.textAlign = "center";
 
   for (let r = 0; r < rows; r++) {
     const head = heads[r];
     head.x += head.speed * dt;
 
-    /* 헤드 열 인덱스 */
     const headCol = Math.floor(head.x / COL_W);
 
     for (let c = 0; c < cols; c++) {
       const cell = grid[r][c];
+
       if (cell.blocked) continue;
 
-      const px   = c * COL_W + COL_W / 2;
-      const py   = r * ROW_H + ROW_H / 2;
-      const dist = headCol - c; // 헤드와의 열 거리 (양수 = 헤드가 오른쪽에)
+      const px = c * COL_W + COL_W / 2;
+      const py = r * ROW_H + ROW_H / 2;
+      const dist = headCol - c;
 
       let alpha;
 
       if (dist === 0) {
-        /* 헤드 위치 : 가장 밝고 글자도 교체 */
-        if (Math.random() < 0.15 * dt) {
+        if (Math.random() < 0.08 * dt) {
           cell.char = randomMark();
         }
-        alpha = 0.88;
-      } else if (dist > 0 && dist <= 4) {
-        /* 헤드 직후 (이미 지나간 곳) : 서서히 어두워짐 */
-        alpha = 0.5 - (dist - 1) * 0.1;
-      } else if (dist < 0 && dist >= -2) {
-        /* 헤드 직전 (아직 안 지나간 곳) : 희미하게 예열 */
-        alpha = 0.08 + (2 + dist) * 0.04;
+
+        alpha = 0.78;
+      } else if (dist > 0 && dist <= 3) {
+        alpha = 0.42 - (dist - 1) * 0.1;
+      } else if (dist < 0 && dist >= -1) {
+        alpha = 0.08;
       } else {
-        /* 나머지 : 기본 투명도 */
         alpha = cell.base;
       }
 
@@ -266,36 +413,40 @@ function draw(ts) {
       ctx.fillText(cell.char, px, py);
     }
 
-    /* 헤드가 화면 끝을 넘어가면 처음부터 재시작 */
     if (head.x > (cols + 2) * COL_W) {
       head.x = -(COL_W * (2 + Math.floor(Math.random() * 6)));
-      /* 글자 리셋 */
+
       for (let c = 0; c < cols; c++) {
-        if (!grid[r][c].blocked) {
-          grid[r][c].char = randomMark();
-          grid[r][c].base = Math.random() * 0.18 + 0.05;
+        const cell = grid[r][c];
+
+        if (!cell.blocked) {
+          cell.char = randomMark();
+          cell.base = Math.random() * 0.12 + 0.04;
         }
       }
     }
   }
-
-  requestAnimationFrame(draw);
 }
 
-/* ── 시작 ── */
 function start() {
   init();
   requestAnimationFrame(draw);
 }
 
-/* 폰트 로드 후 시작 (금지 구역 계산을 위해 레이아웃 완성 필요) */
 if (document.readyState === "complete") {
   setTimeout(start, 150);
 } else {
   window.addEventListener("load", () => setTimeout(start, 150));
 }
 
-window.addEventListener("resize", () => { init(); });
+window.addEventListener("resize", () => {
+  clearTimeout(resizeTimer);
+
+  resizeTimer = setTimeout(() => {
+    lastTime = null;
+    init();
+  }, 180);
+});
 </script>
 
 </body>

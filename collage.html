@@ -137,7 +137,6 @@ canvas {
   background: #fff;
   pointer-events: none;
   box-sizing: border-box;
-  border-right: 1px solid #ffffff;
   overflow: hidden;
 }
 
@@ -165,35 +164,25 @@ canvas {
 }
 
 .punctuation-desc-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  border-top: 1px solid #000000;
+  display: block;
+  border-top: 1px solid #ffffff;
   min-height: 150px;
   width: 100%;
   box-sizing: border-box;
   position: relative;
-  transition: width .78s cubic-bezier(.16, 1, .3, 1), grid-template-columns .78s cubic-bezier(.16, 1, .3, 1);
+  transition: width .78s cubic-bezier(.16, 1, .3, 1);
 }
 
 .punctuation-desc-box {
-  padding: 18px 20px 22px;
+  min-height: 10px;
+  padding: 18px 20px 70px;
   font-family: "Noto Sans KR", sans-serif;
   font-size: .9rem;
-  font-weight: 500;
+  font-weight: 700;
   line-height: 1.55;
-  letter-spacing: -.01em;
-}
-
-.punctuation-desc-box + .punctuation-desc-box {
-  border-left: 1px solid #000;
-}
-
-.punctuation-desc-box strong {
-  display: block;
-  margin-bottom: 10px;
-  font-size: .75rem;
-  font-weight: 800;
-  letter-spacing: .12em;
+  letter-spacing: .08em;
+  display: flex;
+  align-items: flex-start;
 }
 
 #result.mark-expand .punctuation-panel {
@@ -202,7 +191,6 @@ canvas {
 
 #result.mark-expand .punctuation-desc-grid {
   width: 100vw;
-  grid-template-columns: 19vw 1fr;
 }
 
 .empty-state {
@@ -402,11 +390,11 @@ canvas {
 
 .fail {
   font-family: "Noto Serif KR", serif;
-  font-size: 120px;
+  font-size: 50px;
   font-weight: 400;
   line-height: .9;
   letter-spacing: -.08em;
-  border-bottom: 1px solid #000;
+  border-bottom: 1px solid #000000;
   padding: 28px 0;
   pointer-events: none;
 }
@@ -428,18 +416,8 @@ canvas {
     font-size: clamp(86px, 24vw, 160px);
   }
 
-  .punctuation-desc-grid {
-    grid-template-columns: 1fr;
-  }
-
   #result.mark-expand .punctuation-desc-grid {
     width: 100vw;
-    grid-template-columns: 34vw 1fr;
-  }
-
-  .punctuation-desc-box + .punctuation-desc-box {
-    border-left: 0;
-    border-top: 1px solid #000;
   }
 
   .keyword-header {
@@ -464,7 +442,7 @@ canvas {
 
 <div id="menuWrap" aria-label="상단 메뉴">
   <button id="drawBtn" class="icon-btn" title="DRAW MODE" aria-label="DRAW MODE">✎</button>
-  <button id="allBtn" class="icon-btn" title="ALL ITEMS" aria-label="ALL ITEMS">◎</button>
+  <button id="allBtn" title="ALL ITEMS" aria-label="ALL ITEMS">전체</button>
   <button class="filterBtn" data-filter="구두" title="구두">구두</button>
   <button class="filterBtn" data-filter="권표" title="권표">권표</button>
   <button class="filterBtn" data-filter="괄호" title="괄호">괄호</button>
@@ -476,8 +454,7 @@ canvas {
       <div class="punctuation-symbol"></div>
     </div>
     <div class="punctuation-desc-grid">
-      <div class="punctuation-desc-box"><strong>TYPE</strong>화면에 문장부호 형태를 그려 검색합니다.</div>
-      <div class="punctuation-desc-box"><strong>MARK</strong>마우스로 화면에 그려보세요!</div>
+      <div class="punctuation-desc-box">마우스로 자유롭게 그려보세요!</div>
     </div>
   </aside>
   <div class="top-nav"></div>
@@ -518,33 +495,23 @@ function getDisplaySymbol(keyword) {
   if ((keyword || "").includes("괄호")) return " ︵  ︶   ";
   if ((keyword || "").includes("구두")) return "。、";
   if ((keyword || "").includes("권표")) return "◯";
-  if (keyword === "ALL") return "◎";
+  if (keyword === "ALL") return "";
   if (keyword === "DRAW MODE") return "";
-  return "?";
+  return " ";
 }
 
-function getPanelDescription(keyword) {
-  if ((keyword || "").includes("괄호")) {
-    return ["괄호", "드로우 결과는.  ︵  ︶ 기호로 표시됩니다."];
-  }
-  if ((keyword || "").includes("구두")) {
-    return ["구두", "드로우 결과는 。、 기호로 표시됩니다."];
-  }
-  if ((keyword || "").includes("권표")) {
-    return ["권표", "드로우 결과는 ◯ 기호로 표시됩니다."];
-  }
-  if (keyword === "ALL") {
-    return ["전체 자료 목록", "왼쪽에는 전체 보기 기호가 표시됩니다."];
-  }
-  if (keyword === "DRAW MODE") {
-    return ["화면에 문장부호 형태를 그려 검색합니다. 마우스로 화면에 그려보세요!", ""];
-  }
-  return ["검색 결과가 없거나 인식에 실패했습니다.", "다시 그리거나 상단 필터를 선택하세요."];
+function getInfoLabel(keyword) {
+  if ((keyword || "").includes("구두")) return "구두점";
+  if ((keyword || "").includes("괄호")) return "괄호";
+  if ((keyword || "").includes("권표")) return "권표";
+  if (keyword === "ALL") return "전체";
+  if (keyword === "DRAW MODE") return "마우스로 자유롭게 그려보세요!";
+  return " 마우스로 자유롭게 그려보세요! ";
 }
 
 function renderPunctuationPanel(keyword) {
-  const desc = getPanelDescription(keyword);
   const markClass = (keyword || "").includes("구두") ? "mark-gudu" : "";
+  const infoText = getInfoLabel(keyword);
 
   return `
     <aside class="punctuation-panel" aria-label="문장부호 표시 영역">
@@ -552,8 +519,7 @@ function renderPunctuationPanel(keyword) {
         <div class="punctuation-symbol ${markClass}">${escapeHTML(getDisplaySymbol(keyword))}</div>
       </div>
       <div class="punctuation-desc-grid">
-        <div class="punctuation-desc-box"><strong>TYPE</strong>${escapeHTML(desc[0])}</div>
-        <div class="punctuation-desc-box"><strong>MARK</strong>${escapeHTML(desc[1])}</div>
+        <div class="punctuation-desc-box">${escapeHTML(infoText)}</div>
       </div>
     </aside>
   `;
@@ -691,15 +657,29 @@ function addPoint(input, y) {
 }
 
 function drawLine() {
-  if (points.length < 2) return;
+  if (points.length < 3) return;
 
-  const a = points[points.length - 2];
-  const b = points[points.length - 1];
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   ctx.beginPath();
-  ctx.moveTo(a.x, a.y);
-  ctx.lineTo(b.x, b.y);
-  ctx.strokeStyle = "#00ff6e";
+  ctx.moveTo(points[0].x, points[0].y);
+
+  for (let i = 1; i < points.length - 1; i++) {
+    const current = points[i];
+    const next = points[i + 1];
+
+    const xc = (current.x + next.x) / 2;
+    const yc = (current.y + next.y) / 2;
+
+    ctx.quadraticCurveTo(
+      current.x,
+      current.y,
+      xc,
+      yc
+    );
+  }
+
+  ctx.strokeStyle = "#d1d1d1";
   ctx.lineWidth = 3;
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
@@ -794,7 +774,7 @@ function recognizeShape() {
   if (keyword) {
     handleResult(keyword);
   } else {
-    showList([], "인식 실패");
+    showList([], "no result");
   }
 }
 
@@ -833,7 +813,7 @@ function showList(list, keyword) {
       <div class="fail">${escapeHTML(keyword)}</div>
       <div class="result-item">
         <div class="result-row">
-          <div class="result-name"><span>결과 없음</span></div>
+          <div class="result-name"><span> </span></div>
         </div>
       </div>
     `;
