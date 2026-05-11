@@ -2,25 +2,28 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<title>문장부호 인식 + 카메라 손 드로잉</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>문장부호 인식 + 드로우</title>
 
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;500;700;900&family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+
 * {
+  margin: 0;
+  padding: 0;
   box-sizing: border-box;
   user-select: none;
   -webkit-user-select: none;
 }
 
+html,
 body {
-  margin: 0;
-  background: white;
-  color: black;
-  font-family: "Times New Roman", "Didot", "Bodoni 72", serif;
+  width: 100%;
+  height: 100%;
   overflow: hidden;
-}
-
-body.camera-mode {
-  background: white;
+  background: #fff;
+  color: #000;
+  font-family: "Noto Serif KR", serif;
 }
 
 canvas {
@@ -28,36 +31,6 @@ canvas {
   left: 0;
   top: 0;
   display: block;
-}
-
-#webcam {
-  position: fixed;
-  left: -9999px;
-  top: -9999px;
-  width: 1px;
-  height: 1px;
-  opacity: 0;
-  pointer-events: none;
-}
-
-#bgCanvas {
-  z-index: 0;
-  background: white;
-}
-
-#handCanvas {
-  z-index: 1;
-  pointer-events: none;
-  background: transparent;
-  display: none;
-}
-
-body.camera-mode #handCanvas {
-  display: block;
-}
-
-body.camera-mode #bgCanvas {
-  display: none;
 }
 
 #drawCanvas {
@@ -72,117 +45,176 @@ body.camera-mode #bgCanvas {
   z-index: 2;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding: 0 20px 80px;
-  background: transparent;
-  mix-blend-mode: noemal;
+  padding: 0 20px 80px 38vw;
+  background: #fff;
+  mix-blend-mode: normal;
   touch-action: none;
+}
+
+#home-btn {
+  position: fixed;
+  top: 12px;
+  left: 14px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #000;
+  background: #fff;
+  font-family: "Noto Sans KR", sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  z-index: 10000;
+}
+
+#home-btn:hover {
+  background: #d8d8d8;
 }
 
 #menuWrap {
   position: fixed;
   right: 20px;
   top: 20px;
-  z-index: 40;
-  font-family: Arial, sans-serif;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: "Noto Sans KR", sans-serif;
 }
 
-#menuIcon {
-  width: 48px;
-  height: 48px;
-  border: 1px solid black;
-  background: white;
-  color: black;
+#menuWrap button {
+  min-width: 42px;
+  height: 38px;
+  border: 1px solid #000;
+  background: #fff;
+  color: #000;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: "Times New Roman", "Didot", "Bodoni 72", serif;
-  font-size: 34px;
+  font-family: "Noto Sans KR", sans-serif;
+  font-size: .82rem;
+  font-weight: 700;
+  letter-spacing: .08em;
   line-height: 1;
+  padding: 0 16px;
   cursor: pointer;
-  transition: transform 0.35s ease, background 0.25s ease, color 0.25s ease;
+  transition: background .14s ease, color .14s ease;
 }
 
-#menuWrap:hover #menuIcon,
-#menuWrap.open #menuIcon {
-  transform: rotate(180deg);
-  background: black;
-  color: white;
+#menuWrap button.icon-btn {
+  width: 40px;
+  padding: 0;
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: 0;
 }
 
-#menuPanel {
-  position: absolute;
-  right: 0;
-  top: 56px;
-  width: 245px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(-10px);
-  transition: opacity 0.25s ease, transform 0.25s ease;
+#menuWrap button:hover {
+  background: #efefef;
 }
 
-#menuWrap:hover #menuPanel,
-#menuWrap.open #menuPanel {
-  opacity: 1;
-  pointer-events: auto;
-  transform: translateY(0);
-}
-
-#menuPanel button {
-  border: 1px solid black;
-  background: white;
-  color: black;
-  font-family: Arial, sans-serif;
-  font-size: 13px;
-  padding: 9px 12px;
-  cursor: pointer;
-  text-align: left;
-}
-
-#menuPanel button:hover,
-#menuPanel button.active {
-  background: black;
-  color: white;
-}
-
-#cameraGuide {
-  width: 245px;
-  background: rgba(255,255,255,0.92);
-  border: 1px solid black;
-  padding: 10px;
-  font-family: Arial, sans-serif;
-  font-size: 13px;
-  line-height: 1.35;
-  display: none;
-}
-
-body.camera-mode #cameraGuide {
-  display: block;
+#menuWrap button.active {
+  background: #d8d8d8;
+  color: #000;
 }
 
 .top-nav {
-  display: flex;
-  align-items: flex-end;
-  border-bottom: 2px solid black;
-  padding-bottom: 10px;
+  display: none;
 }
 
-.top-nav span {
-  font-size: clamp(60px, 10vw, 180px);
-  line-height: 1;
-  letter-spacing: -0.02em;
-  font-weight: 100;
+.punctuation-panel {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 38vw;
+  height: 100vh;
+  z-index: 9998;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  border-right: 1px solid #ffffff;
+  background: #fff;
+  pointer-events: none;
+  box-sizing: border-box;
+  border-right: 1px solid #ffffff;
+  overflow: hidden;
 }
 
-.empty-state {
-  height: calc(100vh - 160px);
+.punctuation-symbol-wrap {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: clamp(42px, 8vw, 120px);
-  letter-spacing: -0.08em;
+  min-height: 0;
+  padding: 72px 28px 28px;
+}
+
+.punctuation-symbol {
+  font-family: "Noto Serif KR", serif;
+  font-size: clamp(120px, 22vw, 310px);
+  font-weight: 200;
+  line-height: .82;
+  writing-mode: vertical-rl;
+  letter-spacing: .1em;
+  text-align: center;
+  white-space: pre;
+}
+
+.punctuation-symbol.mark-gudu {
+  transform: translate(-100px, 90px);
+}
+
+.punctuation-desc-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-top: 1px solid #000000;
+  min-height: 150px;
+  width: 100%;
+  box-sizing: border-box;
+  position: relative;
+  transition: width .78s cubic-bezier(.16, 1, .3, 1), grid-template-columns .78s cubic-bezier(.16, 1, .3, 1);
+}
+
+.punctuation-desc-box {
+  padding: 18px 20px 22px;
+  font-family: "Noto Sans KR", sans-serif;
+  font-size: .9rem;
+  font-weight: 500;
+  line-height: 1.55;
+  letter-spacing: -.01em;
+}
+
+.punctuation-desc-box + .punctuation-desc-box {
+  border-left: 1px solid #000;
+}
+
+.punctuation-desc-box strong {
+  display: block;
+  margin-bottom: 10px;
+  font-size: .75rem;
+  font-weight: 800;
+  letter-spacing: .12em;
+}
+
+#result.mark-expand .punctuation-panel {
+  overflow: visible;
+}
+
+#result.mark-expand .punctuation-desc-grid {
+  width: 100vw;
+  grid-template-columns: 19vw 1fr;
+}
+
+.empty-state {
+  height: calc(100vh - 80px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Noto Serif KR", serif;
+  font-size: 120px;
+  font-weight: 400;
+  line-height: .9;
+  letter-spacing: -.08em;
   pointer-events: none;
 }
 
@@ -191,79 +223,95 @@ body.camera-mode #cameraGuide {
   top: 0;
   z-index: 9999;
   display: grid;
-  grid-template-columns: 38% minmax(140px, 28vw) 1fr;
+  grid-template-columns: minmax(150px, 28vw) 1fr;
   align-items: center;
-  border-bottom: 1px solid black;
+  border-bottom: 1px solid #ffffff;
   min-height: 92px;
   pointer-events: none;
-  background: transparent;
+  background: #fff;
   backdrop-filter: blur(3px);
   mix-blend-mode: normal;
 }
 
+.keyword-title,
+.keyword-info {
+  font-family: "Noto Serif KR", serif;
+  font-size: 70px;
+  font-weight: 100;
+  line-height: .9;
+  letter-spacing: -.06em;
+}
+
 .keyword-title {
-  font-size: clamp(60px, 7vw, 70px);
-  line-height: 0.8;
-  letter-spacing: -0.08em;
+  grid-column: 2;
 }
 
 .keyword-info {
-  font-size: clamp(50px, 2.5vw, 50px);
-  line-height: 1;
-  font-weight: 100;
-  letter-spacing: -0.06em;
+  grid-column: 1;
 }
 
 .result-item {
-  border-bottom: 1px solid black;
+  border-top: 1px solid #000000;
+  opacity: 0;
+  transform: translateY(-18px);
+  animation: listDrop .46s cubic-bezier(.16, 1, .3, 1) forwards;
+}
+
+@keyframes listDrop {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .result-row {
   display: grid;
-  grid-template-columns: 38% minmax(140px, 28vw) 70px;
+  grid-template-columns: 1fr 30px;
   align-items: center;
-  min-height: 56px;
+  min-height: 40px;
   cursor: default;
 }
 
 .result-name {
-  grid-column: 2;
-  height: 32px;
+  grid-column: 1;
+  min-width: 0;
+  min-height: 10px;
   display: flex;
   align-items: center;
-  overflow: hidden;
+  overflow: visible;
   background: transparent;
-  color: black;
+  color: #000;
   padding: 0 8px;
-  font-size: clamp(32px, 2.5vw, 32px);
-  line-height: 1;
-  letter-spacing: -0.05em;
+  font-family: "Noto Serif KR", serif;
+  font-size: 34px;
+  font-weight: 300;
+  line-height: .7;
+  letter-spacing: .02em;
   white-space: nowrap;
   cursor: pointer;
+  transition: color .2s ease;
 }
 
 .result-name span {
   display: inline-block;
   white-space: nowrap;
-  padding-right: 60px;
+  padding-right: 20px;
 }
 
-.result-name:hover span {
-  animation: slideTitle 5s linear infinite alternate;
-}
-
-@keyframes slideTitle {
-  from { transform: translateX(0); }
-  to { transform: translateX(-60%); }
+.result-name:hover {
+  color: #888;
 }
 
 .plus {
-  grid-column: 3;
-  font-size: 64px;
-  font-weight: 50;
+  grid-column: 2;
+  width: 100%;
+  padding-right: 10px;
+  font-family: "Noto Serif KR", serif;
+  font-size: 54px;
+  font-weight: 300;
   line-height: 1;
   text-align: right;
-  transition: transform 0.35s ease;
+  transition: transform .35s ease;
   cursor: pointer;
 }
 
@@ -274,163 +322,169 @@ body.camera-mode #cameraGuide {
 .result-detail {
   max-height: 0;
   overflow: hidden;
-  transition: max-height 0.55s ease, padding 0.55s ease;
+  transition: max-height .55s ease, padding .55s ease;
 }
 
 .result-item.open .result-detail {
-  max-height: 70vh;
-  padding: 18px 0 26px;
+  max-height: 180vh;
+  padding: 0px 0 18px;
 }
 
 .detail-inner {
   display: grid;
-  grid-template-columns: minmax(140px, 240px) 1fr;
-  gap: 24px;
-  padding-left: 38%;
+  grid-template-columns: minmax(300px, 600px) 1fr;
+  padding-left: 0;
   align-items: start;
 }
 
 .detail-inner img {
-  width: 200%;
+  width: 100%;
+  max-width: 100%;
   z-index: 20;
-  max-height: 600px;
+  max-height: 1600px;
   object-fit: contain;
-  background: white;
-  filter: grayscale(0) contrast(1) brightness(1);
-  border: 1px solid rgba(0,0,0,0.22);
+  object-position: top center;
+  background: #fff;
+  filter: grayscale(1) contrast(1) brightness(1);
+  border: 1px solid rgba(0,0,0,.22);
+  display: block;
+  padding: 0px;
+  box-sizing: border-box;
 }
 
 .no-image {
   width: 100%;
-  min-height: 160px;
-  border: 1px solid black;
-  background: white;
+  min-height: 480px;
+  border: 1px solid #000;
+  background: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: Arial, sans-serif;
-  font-size: 13px;
+  font-family: "Noto Sans KR", sans-serif;
+  font-size: .8rem;
+  font-weight: 700;
+  letter-spacing: .08em;
 }
 
 .detail-text {
-  font-family: Arial, sans-serif;
-  font-size: 17px;
-  line-height: 1;
-  letter-spacing: -0.02em;
+  font-family: "Noto Serif KR", serif;
+  font-size: 1.3rem;
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: .08em;
   user-select: text;
   -webkit-user-select: text;
-
   writing-mode: vertical-rl;
   text-orientation: mixed;
-  height: 320px;
+  height: 350px;
   overflow-x: auto;
   overflow-y: hidden;
 }
 
 .detail-text div {
   border-bottom: none;
-  border-left: 0px solid rgba(0,0,0,0.35);
-  padding: 0 3px;
-}
-
-.grid-wrap {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 18px;
-  padding: 22px 0 60px;
-}
-
-.grid-card {
-  border: 1px solid black;
-  background: rgba(255,255,255,0.85);
-  cursor: pointer;
-  min-height: 220px;
+  border-left: 0 solid rgba(0,0,0,.35);
+  padding: 0 0px;
   display: flex;
-  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.7em;
 }
 
-.grid-card img {
-  width: 100%;
-  height: 160px;
-  object-fit: contain;
-  background: white;
-  filter: grayscale(1) contrast(1.2);
-  border-bottom: 1px solid black;
-}
-
-.grid-card .no-image {
-  height: 160px;
-  min-height: 160px;
-  border: none;
-  border-bottom: 1px solid black;
-}
-
-.grid-name {
-  font-family: Arial, sans-serif;
-  font-size: 15px;
-  line-height: 1.1;
-  padding: 8px;
-  word-break: keep-all;
-}
-
-.grid-cat {
-  font-family: Arial, sans-serif;
-  font-size: 12px;
-  line-height: 1.1;
-  padding: 0 8px 8px;
-  opacity: 0.7;
+.detail-text .label {
+  font-family: "Noto Serif KR", serif;
+  font-size: 1.3rem;
+  font-weight: 400;
+  letter-spacing: .08em;
+  flex: 0 0 3.4em;
+  text-align: justify;
+  text-align-last: justify;
 }
 
 .fail {
-  font-size: clamp(54px, 9vw, 132px);
-  line-height: 0.9;
-  letter-spacing: -0.08em;
-  border-bottom: 1px solid black;
+  font-family: "Noto Serif KR", serif;
+  font-size: 120px;
+  font-weight: 400;
+  line-height: .9;
+  letter-spacing: -.08em;
+  border-bottom: 1px solid #000;
   padding: 28px 0;
   pointer-events: none;
+}
+
+@media (max-width: 760px) {
+  #result {
+    padding-left: 34vw;
+  }
+
+  #home-btn {
+    left: 14px;
+  }
+
+  .punctuation-panel {
+    width: 34vw;
+  }
+
+  .punctuation-symbol {
+    font-size: clamp(86px, 24vw, 160px);
+  }
+
+  .punctuation-desc-grid {
+    grid-template-columns: 1fr;
+  }
+
+  #result.mark-expand .punctuation-desc-grid {
+    width: 100vw;
+    grid-template-columns: 34vw 1fr;
+  }
+
+  .punctuation-desc-box + .punctuation-desc-box {
+    border-left: 0;
+    border-top: 1px solid #000;
+  }
+
+  .keyword-header {
+    grid-template-columns: 1fr;
+    min-height: 110px;
+  }
+
+  .keyword-info,
+  .keyword-title {
+    grid-column: 1;
+    font-size: 46px;
+  }
 }
 </style>
 </head>
 
 <body>
 
-<video id="webcam" autoplay playsinline muted></video>
+<div id="home-btn">⌂</div>
 
-<canvas id="bgCanvas"></canvas>
-<canvas id="handCanvas"></canvas>
 <canvas id="drawCanvas"></canvas>
 
-<div id="menuWrap">
-  <div id="menuIcon" aria-label="메뉴 열기" role="button" tabindex="0">◎</div>
-  <div id="menuPanel">
-    <button id="cameraBtn">CAMERA DRAW</button>
-    <button id="drawBtn">DRAW MODE</button>
-    <button id="allBtn">ALL ITEMS</button>
-    <button id="viewBtn">GRID VIEW</button>
-    <button class="filterBtn" data-filter="구두">구두</button>
-    <button class="filterBtn" data-filter="권표">권표</button>
-    <button class="filterBtn" data-filter="괄호">괄호</button>
-    <div id="cameraGuide">
-      검지와 중지를 붙이면 그리기 시작<br>
-      두 손가락을 떼면 인식/검색 완료<br><br>
-      흰 배경 위에 손과 손끝만 표시됩니다.
-    </div>
-  </div>
+<div id="menuWrap" aria-label="상단 메뉴">
+  <button id="drawBtn" class="icon-btn" title="DRAW MODE" aria-label="DRAW MODE">✎</button>
+  <button id="allBtn" class="icon-btn" title="ALL ITEMS" aria-label="ALL ITEMS">◎</button>
+  <button class="filterBtn" data-filter="구두" title="구두">구두</button>
+  <button class="filterBtn" data-filter="권표" title="권표">권표</button>
+  <button class="filterBtn" data-filter="괄호" title="괄호">괄호</button>
 </div>
 
 <div id="result">
-  <div class="top-nav">
-    <span>(。● ○ ◎ ◉ ) </span>
-  </div>
-  <div class="empty-state">DRAW MODE</div>
+  <aside class="punctuation-panel" aria-label="문장부호 표시 영역">
+    <div class="punctuation-symbol-wrap">
+      <div class="punctuation-symbol"></div>
+    </div>
+    <div class="punctuation-desc-grid">
+      <div class="punctuation-desc-box"><strong>TYPE</strong>화면에 문장부호 형태를 그려 검색합니다.</div>
+      <div class="punctuation-desc-box"><strong>MARK</strong>마우스로 화면에 그려보세요!</div>
+    </div>
+  </aside>
+  <div class="top-nav"></div>
+  <div class="empty-state"></div>
 </div>
 
-<script type="module">
-import {
-  HandLandmarker,
-  FilesetResolver
-} from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest";
-
+<script>
 const SPREADSHEET_ID = "1lgA52QAg3-tIM07LVgSJVRmOwjbXmUeWfJ1xou-IE2Y";
 const GID = "2070526780";
 const CSV_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/export?format=csv&gid=${GID}`;
@@ -446,77 +500,68 @@ const K = {
   sym: "UL-Punctuation"
 };
 
-const IMAGE_COUNT = 260;
-const IMAGE_LOAD_COUNT = 100;
-
-const video = document.getElementById("webcam");
-const menuWrap = document.getElementById("menuWrap");
-const menuIcon = document.getElementById("menuIcon");
-const cameraBtn = document.getElementById("cameraBtn");
 const drawBtn = document.getElementById("drawBtn");
 const allBtn = document.getElementById("allBtn");
-const viewBtn = document.getElementById("viewBtn");
 const filterBtns = document.querySelectorAll(".filterBtn");
-
-function toggleMenu() {
-  menuWrap.classList.toggle("open");
-}
-
-function closeMenu() {
-  menuWrap.classList.remove("open");
-}
-
-menuIcon.addEventListener("click", e => {
-  e.stopPropagation();
-  toggleMenu();
-});
-
-menuIcon.addEventListener("keydown", e => {
-  if (e.key === "Enter" || e.key === " ") {
-    e.preventDefault();
-    toggleMenu();
-  }
-});
-
-menuWrap.addEventListener("click", e => {
-  e.stopPropagation();
-});
-
-document.addEventListener("click", closeMenu);
-
-const bgCanvas = document.getElementById("bgCanvas");
-const bgCtx = bgCanvas.getContext("2d");
-
-const handCanvas = document.getElementById("handCanvas");
-const handCtx = handCanvas.getContext("2d");
 
 const canvas = document.getElementById("drawCanvas");
 const ctx = canvas.getContext("2d");
-
 const result = document.getElementById("result");
 
 let drawing = false;
 let points = [];
 let sheetRows = [];
-let loadedImages = [];
-
-let cameraMode = false;
-let cameraReady = false;
-let handLandmarker = null;
-let lastVideoTime = -1;
-let gridMode = false;
 let currentList = [];
 let currentKeyword = "";
 
+function getDisplaySymbol(keyword) {
+  if ((keyword || "").includes("괄호")) return " ︵  ︶   ";
+  if ((keyword || "").includes("구두")) return "。、";
+  if ((keyword || "").includes("권표")) return "◯";
+  if (keyword === "ALL") return "◎";
+  if (keyword === "DRAW MODE") return "";
+  return "?";
+}
+
+function getPanelDescription(keyword) {
+  if ((keyword || "").includes("괄호")) {
+    return ["괄호", "드로우 결과는.  ︵  ︶ 기호로 표시됩니다."];
+  }
+  if ((keyword || "").includes("구두")) {
+    return ["구두", "드로우 결과는 。、 기호로 표시됩니다."];
+  }
+  if ((keyword || "").includes("권표")) {
+    return ["권표", "드로우 결과는 ◯ 기호로 표시됩니다."];
+  }
+  if (keyword === "ALL") {
+    return ["전체 자료 목록", "왼쪽에는 전체 보기 기호가 표시됩니다."];
+  }
+  if (keyword === "DRAW MODE") {
+    return ["화면에 문장부호 형태를 그려 검색합니다. 마우스로 화면에 그려보세요!", ""];
+  }
+  return ["검색 결과가 없거나 인식에 실패했습니다.", "다시 그리거나 상단 필터를 선택하세요."];
+}
+
+function renderPunctuationPanel(keyword) {
+  const desc = getPanelDescription(keyword);
+  const markClass = (keyword || "").includes("구두") ? "mark-gudu" : "";
+
+  return `
+    <aside class="punctuation-panel" aria-label="문장부호 표시 영역">
+      <div class="punctuation-symbol-wrap">
+        <div class="punctuation-symbol ${markClass}">${escapeHTML(getDisplaySymbol(keyword))}</div>
+      </div>
+      <div class="punctuation-desc-grid">
+        <div class="punctuation-desc-box"><strong>TYPE</strong>${escapeHTML(desc[0])}</div>
+        <div class="punctuation-desc-box"><strong>MARK</strong>${escapeHTML(desc[1])}</div>
+      </div>
+    </aside>
+  `;
+}
+
 function resizeCanvas() {
-  bgCanvas.width = window.innerWidth;
-  bgCanvas.height = window.innerHeight;
-  handCanvas.width = window.innerWidth;
-  handCanvas.height = window.innerHeight;
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
-
-  if (loadedImages.length && !cameraMode) drawRandomBackground();
 }
 
 window.addEventListener("resize", resizeCanvas);
@@ -590,89 +635,20 @@ function getPunctuationImage(item) {
   return "";
 }
 
-function loadImage(src) {
-  return new Promise(resolve => {
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.onload = () => resolve(img);
-    img.onerror = () => resolve(null);
-    img.src = src;
-  });
-}
-
 async function loadSheet() {
-  const csvText = await fetch(CSV_URL).then(r => r.text());
-  sheetRows = parseCSV(csvText);
-
-  const urls = sheetRows.flatMap(row => extractImageUrls(row[K.img]));
-  const selected = urls
-    .sort(() => Math.random() - 0.5)
-    .slice(0, IMAGE_LOAD_COUNT);
-
-  loadedImages = (await Promise.all(selected.map(loadImage))).filter(Boolean);
-  drawRandomBackground();
+  try {
+    const csvText = await fetch(CSV_URL).then(r => r.text());
+    sheetRows = parseCSV(csvText);
+  } catch (err) {
+    console.error("CSV 로드 실패:", err);
+    showList([], "데이터 로드 실패");
+  }
 }
 
 loadSheet();
 
-function drawRandomBackground() {
-  const W = bgCanvas.width;
-  const H = bgCanvas.height;
-
-  bgCtx.clearRect(0, 0, W, H);
-  bgCtx.fillStyle = "white";
-  bgCtx.fillRect(0, 0, W, H);
-
-  if (!loadedImages.length) return;
-
-  for (let i = 0; i < IMAGE_COUNT; i++) {
-    const img = loadedImages[Math.floor(Math.random() * loadedImages.length)];
-
-    const scale = 0.18 + Math.random() * 0.9;
-    const iw = img.width * scale;
-    const ih = img.height * scale;
-
-    const x = Math.random() * W;
-    const y = Math.random() * H;
-
-    bgCtx.save();
-    bgCtx.translate(x, y);
-    bgCtx.rotate(Math.random() * Math.PI * 2);
-
-    bgCtx.globalAlpha = 0.14 + Math.random() * 0.36;
-    bgCtx.filter = "grayscale(1) contrast(2.4) brightness(0.9)";
-
-    bgCtx.drawImage(img, -iw / 2, -ih / 2, iw, ih);
-
-    bgCtx.restore();
-    bgCtx.filter = "none";
-  }
-
-  addNoise();
-}
-
-function addNoise() {
-  const W = bgCanvas.width;
-  const H = bgCanvas.height;
-  const imgData = bgCtx.getImageData(0, 0, W, H);
-  const d = imgData.data;
-
-  for (let i = 0; i < d.length; i += 4) {
-    const gray = d[i] * 0.299 + d[i + 1] * 0.587 + d[i + 2] * 0.114;
-    const noise = (Math.random() - 0.5) * 38;
-    const v = Math.max(0, Math.min(255, gray + noise));
-
-    d[i] = v;
-    d[i + 1] = v;
-    d[i + 2] = v;
-  }
-
-  bgCtx.putImageData(imgData, 0, 0);
-}
-
 result.addEventListener("pointerdown", e => {
-  if (cameraMode) return;
-  if (e.target.closest(".result-name, .plus, .result-detail, .grid-card")) return;
+  if (e.target.closest(".result-name, .plus, .result-detail")) return;
 
   e.preventDefault();
 
@@ -684,7 +660,6 @@ result.addEventListener("pointerdown", e => {
 });
 
 result.addEventListener("pointermove", e => {
-  if (cameraMode) return;
   if (!drawing) return;
 
   e.preventDefault();
@@ -694,7 +669,6 @@ result.addEventListener("pointermove", e => {
 });
 
 result.addEventListener("pointerup", () => {
-  if (cameraMode) return;
   if (!drawing) return;
 
   drawing = false;
@@ -702,7 +676,6 @@ result.addEventListener("pointerup", () => {
 });
 
 result.addEventListener("pointercancel", () => {
-  if (cameraMode) return;
   if (!drawing) return;
 
   drawing = false;
@@ -726,8 +699,8 @@ function drawLine() {
   ctx.beginPath();
   ctx.moveTo(a.x, a.y);
   ctx.lineTo(b.x, b.y);
-  ctx.strokeStyle = "black";
-  ctx.lineWidth = cameraMode ? 8 : 6;
+  ctx.strokeStyle = "#00ff6e";
+  ctx.lineWidth = 3;
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
   ctx.stroke();
@@ -830,7 +803,7 @@ function handleResult(keyword) {
     (row[K.cat] || "").includes(keyword)
   );
 
-  showList(filtered, keyword);
+  showList(shuffleArray(filtered), keyword);
 }
 
 function escapeHTML(str) {
@@ -844,18 +817,16 @@ function escapeHTML(str) {
 
 function imageHTML(src, alt = "") {
   if (!src) return `<div class="no-image">NO PUNCTUATION IMAGE</div>`;
-  return `<img src="${escapeHTML(src)}" alt="${escapeHTML(alt)}" loading="lazy" referrerpolicy="no-referrer">`;
+  return `<img src="${escapeHTML(src)}?t=${Date.now()}" alt="${escapeHTML(alt)}" referrerpolicy="no-referrer">`;
 }
 
 function showList(list, keyword) {
+  result.classList.remove("mark-expand");
+
   currentList = list;
   currentKeyword = keyword;
 
-  let html = `
-    <div class="top-nav">
-      <span>(。● ○ ◎ ◉ )</span>
-    </div>
-  `;
+  let html = `${renderPunctuationPanel(keyword)}<div class="top-nav"></div>`;
 
   if (!list.length) {
     html += `
@@ -869,32 +840,32 @@ function showList(list, keyword) {
 
     result.innerHTML = html;
     bindResultRows();
-    if (!cameraMode) drawRandomBackground();
+    updateActiveButtons(keyword);
     return;
   }
 
   html += `
     <div class="keyword-header">
-      <div class="keyword-title">${escapeHTML(keyword)}</div>
       <div class="keyword-info">${list.length} RESULTS</div>
+      <div class="keyword-title"></div>
     </div>
   `;
 
-  html += gridMode ? renderGrid(list) : renderRows(list);
+  html += renderRows(list);
 
   result.innerHTML = html;
   bindResultRows();
-  if (!cameraMode) drawRandomBackground();
+  updateActiveButtons(keyword);
 }
 
 function renderRows(list) {
   let html = "";
 
-  list.forEach(item => {
+  list.forEach((item, index) => {
     const img = getPunctuationImage(item);
 
     html += `
-      <div class="result-item">
+      <div class="result-item" style="animation-delay:${index * 0.055}s">
         <div class="result-row">
           <div class="result-name"><span>${escapeHTML(item[K.name])}</span></div>
           <div class="plus">+</div>
@@ -904,12 +875,12 @@ function renderRows(list) {
           <div class="detail-inner">
             ${imageHTML(img, item[K.name])}
             <div class="detail-text">
-              <div><b>이름</b> ${escapeHTML(item[K.name])}</div>
-              <div><b>분류</b> ${escapeHTML(item[K.cat])}</div>
-              <div><b>시대</b> ${escapeHTML(item[K.period])}</div>
-              <div><b>종이</b> ${escapeHTML(item[K.paper])}</div>
-              <div><b>크기</b> ${escapeHTML(item[K.size])}</div>
-              <div><b>소장처</b> ${escapeHTML(item[K.coll])}</div>
+              <div><span class="label">이름</span> ${escapeHTML(item[K.name])}</div>
+              <div><span class="label">분류</span> ${escapeHTML(item[K.cat])}</div>
+              <div><span class="label">시대</span> ${escapeHTML(item[K.period])}</div>
+              <div><span class="label">종이</span> ${escapeHTML(item[K.paper])}</div>
+              <div><span class="label">크기</span> ${escapeHTML(item[K.size])}</div>
+              <div><span class="label">소장처</span> ${escapeHTML(item[K.coll])}</div>
             </div>
           </div>
         </div>
@@ -920,25 +891,6 @@ function renderRows(list) {
   return html;
 }
 
-function renderGrid(list) {
-  let html = `<div class="grid-wrap">`;
-
-  list.forEach(item => {
-    const img = getPunctuationImage(item);
-
-    html += `
-      <div class="grid-card">
-        ${imageHTML(img, item[K.name])}
-        <div class="grid-name">${escapeHTML(item[K.name])}</div>
-        <div class="grid-cat">${escapeHTML(item[K.cat])}</div>
-      </div>
-    `;
-  });
-
-  html += `</div>`;
-  return html;
-}
-
 function bindResultRows() {
   document.querySelectorAll(".result-name, .plus").forEach(el => {
     el.addEventListener("click", e => {
@@ -946,14 +898,14 @@ function bindResultRows() {
       el.closest(".result-item").classList.toggle("open");
     });
   });
+}
 
-  document.querySelectorAll(".grid-card").forEach((el, index) => {
-    el.addEventListener("click", e => {
-      e.stopPropagation();
-      gridMode = false;
-      viewBtn.textContent = "GRID VIEW";
-      showList([currentList[index]], currentList[index][K.name] || "상세 보기");
-      document.querySelector(".result-item")?.classList.add("open");
+function playMarkExpandMotion() {
+  result.classList.remove("mark-expand");
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      result.classList.add("mark-expand");
     });
   });
 }
@@ -961,237 +913,64 @@ function bindResultRows() {
 function resetToDrawMode() {
   currentList = [];
   currentKeyword = "";
+
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+
   result.innerHTML = `
-    <div class="top-nav">
-      <span>(。● ○ ◎ ◉ )</span>
-    </div>
-    <div class="empty-state">DRAW MODE</div>
+    ${renderPunctuationPanel("DRAW MODE")}
+    <div class="top-nav"></div>
+    <div class="empty-state"></div>
   `;
-  if (!cameraMode) drawRandomBackground();
+
+  updateActiveButtons("DRAW MODE");
+  playMarkExpandMotion();
 }
 
-function setCameraMode(nextMode) {
-  cameraMode = nextMode;
-  document.body.classList.toggle("camera-mode", cameraMode);
-
-  if (cameraMode) {
-    cameraBtn.textContent = "MOUSE DRAW";
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    handCtx.clearRect(0, 0, handCanvas.width, handCanvas.height);
-    points = [];
-    drawing = false;
-
-    if (!cameraReady) {
-      setupCameraAndTracking();
-    }
-  } else {
-    cameraBtn.textContent = "CAMERA DRAW";
-    drawing = false;
-    points = [];
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    handCtx.clearRect(0, 0, handCanvas.width, handCanvas.height);
-    drawRandomBackground();
-  }
+function shuffleArray(arr) {
+  return [...arr].sort(() => Math.random() - 0.5);
 }
 
-cameraBtn.addEventListener("click", () => {
-  setCameraMode(!cameraMode);
-  closeMenu();
-});
+function updateActiveButtons(keyword) {
+  drawBtn.classList.toggle("active", keyword === "DRAW MODE");
+  allBtn.classList.toggle("active", keyword === "ALL");
 
-drawBtn.addEventListener("click", () => {
-  setCameraMode(false);
+  filterBtns.forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.filter === keyword);
+  });
+}
+
+drawBtn.addEventListener("click", e => {
+  e.stopPropagation();
   resetToDrawMode();
-  closeMenu();
 });
 
-allBtn.addEventListener("click", () => {
-  setCameraMode(false);
-  showList(sheetRows, "전체 보기");
-  closeMenu();
-});
-
-viewBtn.addEventListener("click", () => {
-  gridMode = !gridMode;
-  viewBtn.textContent = gridMode ? "LIST VIEW" : "GRID VIEW";
-
-  if (currentList.length) {
-    showList(currentList, currentKeyword || "전체 보기");
-  } else {
-    showList(sheetRows, "전체 보기");
-  }
-  closeMenu();
+allBtn.addEventListener("click", e => {
+  e.stopPropagation();
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  showList(sheetRows, "ALL");
 });
 
 filterBtns.forEach(btn => {
-  btn.addEventListener("click", () => {
-    setCameraMode(false);
-    handleResult(btn.dataset.filter);
-    closeMenu();
+  btn.addEventListener("click", e => {
+    e.stopPropagation();
+
+    const keyword = btn.dataset.filter;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const filtered = sheetRows.filter(row =>
+      (row[K.cat] || "").includes(keyword)
+    );
+
+    showList(shuffleArray(filtered), keyword);
   });
 });
 
-async function setupCameraAndTracking() {
-  await setupCamera();
-  await setupHandTracking();
-  cameraReady = true;
-  requestAnimationFrame(cameraLoop);
-}
+playMarkExpandMotion();
 
-async function setupCamera() {
-  const stream = await navigator.mediaDevices.getUserMedia({
-    video: {
-      facingMode: "user",
-      width: { ideal: 640 },
-      height: { ideal: 360 },
-      frameRate: { ideal: 24, max: 30 }
-    },
-    audio: false
-  });
-
-  video.srcObject = stream;
-
-  return new Promise(resolve => {
-    video.onloadedmetadata = () => resolve();
-  });
-}
-
-async function setupHandTracking() {
-  const vision = await FilesetResolver.forVisionTasks(
-    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
-  );
-
-  handLandmarker = await HandLandmarker.createFromOptions(vision, {
-    baseOptions: {
-      modelAssetPath:
-        "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/latest/hand_landmarker.task",
-      delegate: "GPU"
-    },
-    runningMode: "VIDEO",
-    numHands: 1
-  });
-}
-
-let lastDetectTime = 0;
-const DETECT_INTERVAL = 1000 / 24;
-
-function cameraLoop(now) {
-  if (cameraMode && handLandmarker && video.readyState >= 2) {
-    if (
-      video.currentTime !== lastVideoTime &&
-      now - lastDetectTime > DETECT_INTERVAL
-    ) {
-      lastDetectTime = now;
-      lastVideoTime = video.currentTime;
-
-      const handResult = handLandmarker.detectForVideo(video, now);
-      handleCameraHand(handResult);
-    }
-  }
-
-  requestAnimationFrame(cameraLoop);
-}
-
-function handleCameraHand(handResult) {
-  handCtx.clearRect(0, 0, handCanvas.width, handCanvas.height);
-
-  if (!handResult.landmarks || handResult.landmarks.length === 0) {
-    if (drawing) finishCameraDrawing();
-    return;
-  }
-
-  const hand = handResult.landmarks[0];
-  drawHandSkeleton(hand);
-
-  const indexTip = hand[8];
-  const middleTip = hand[12];
-
-  const x = (1 - indexTip.x) * canvas.width;
-  const y = indexTip.y * canvas.height;
-
-  const middleX = (1 - middleTip.x) * canvas.width;
-  const middleY = middleTip.y * canvas.height;
-
-  const twoFingerDistance = Math.hypot(x - middleX, y - middleY);
-  const isDrawingGesture = twoFingerDistance < 58;
-
-  drawCameraCursor(x, y, isDrawingGesture);
-
-  if (isDrawingGesture) {
-    if (!drawing) {
-      drawing = true;
-      points = [];
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      addPoint(x, y);
-    } else {
-      const last = points[points.length - 1];
-      if (!last || Math.hypot(x - last.x, y - last.y) > 8) {
-        addPoint(x, y);
-        drawLine();
-      }
-    }
-  } else {
-    if (drawing) {
-      finishCameraDrawing();
-    }
-  }
-}
-
-function drawHandSkeleton(hand) {
-  const connections = [
-    [0,1],[1,2],[2,3],[3,4],
-    [0,5],[5,6],[6,7],[7,8],
-    [5,9],[9,10],[10,11],[11,12],
-    [9,13],[13,14],[14,15],[15,16],
-    [13,17],[17,18],[18,19],[19,20],
-    [0,17]
-  ];
-
-  handCtx.strokeStyle = "black";
-  handCtx.lineWidth = 3;
-  handCtx.lineCap = "round";
-  handCtx.lineJoin = "round";
-
-  connections.forEach(([a, b]) => {
-    const pa = hand[a];
-    const pb = hand[b];
-    const ax = (1 - pa.x) * handCanvas.width;
-    const ay = pa.y * handCanvas.height;
-    const bx = (1 - pb.x) * handCanvas.width;
-    const by = pb.y * handCanvas.height;
-
-    handCtx.beginPath();
-    handCtx.moveTo(ax, ay);
-    handCtx.lineTo(bx, by);
-    handCtx.stroke();
-  });
-
-  hand.forEach((p, i) => {
-    const x = (1 - p.x) * handCanvas.width;
-    const y = p.y * handCanvas.height;
-
-    handCtx.beginPath();
-    handCtx.arc(x, y, i === 8 || i === 12 ? 7 : 4, 0, Math.PI * 2);
-    handCtx.fillStyle = "black";
-    handCtx.fill();
-  });
-}
-
-function finishCameraDrawing() {
-  drawing = false;
-  recognizeShape();
-}
-
-function drawCameraCursor(x, y, active) {
-  handCtx.beginPath();
-  handCtx.arc(x, y, active ? 15 : 10, 0, Math.PI * 2);
-  handCtx.fillStyle = active ? "black" : "white";
-  handCtx.strokeStyle = "black";
-  handCtx.lineWidth = 3;
-  handCtx.fill();
-  handCtx.stroke();
-}
+document.getElementById("home-btn").addEventListener("click", () => {
+  window.location.href = "index.html";
+});
 </script>
 
 </body>
