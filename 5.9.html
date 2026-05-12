@@ -88,14 +88,27 @@ body{cursor:none;}
 #home-btn:hover{background:#d8d8d8;}
 
 #scroll{
-  position:absolute;inset:64px 0 0 0;
-  display:flex;flex-direction:row;
-  overflow-x:auto;overflow-y:hidden;
+  position:absolute;
+  inset:64px 0 0 0;
+
+  display:flex;
+  flex-direction:row;
+
+  overflow-x:auto;
+  overflow-y:hidden;
+
   scrollbar-width:none;
   background:#fff;
-  overscroll-behavior-x:none;
-  touch-action:pan-x;
+
+  overscroll-behavior:none;
+  -webkit-overflow-scrolling:touch;
+
+  touch-action:none;
 }
+#scroll::-webkit-scrollbar{
+  display:none;
+}
+
 #scroll::-webkit-scrollbar{display:none;}
 
 .item-wrapper{
@@ -797,6 +810,82 @@ function updateBookTargets(){
 
 const cursor = document.getElementById("cursor");
 const scrollEl = document.getElementById("scroll");
+
+/* 세로 휠 → 가로 스크롤 */
+scrollEl.addEventListener("wheel",e=>{
+  e.preventDefault();
+
+  const horizontalAmount =
+    Math.abs(e.deltaX) > Math.abs(e.deltaY)
+      ? e.deltaX
+      : e.deltaY;
+
+  scrollEl.scrollLeft += horizontalAmount * 1.2;
+},{
+  passive:false
+});
+
+
+/* 모바일/트랙패드 스와이프 */
+let touchStartX = 0;
+let touchStartY = 0;
+let touchStartScrollLeft = 0;
+
+scrollEl.addEventListener("touchstart",e=>{
+  if(e.touches.length !== 1) return;
+
+  touchStartX = e.touches[0].clientX;
+  touchStartY = e.touches[0].clientY;
+  touchStartScrollLeft = scrollEl.scrollLeft;
+},{
+  passive:true
+});
+
+scrollEl.addEventListener("touchmove",e=>{
+  if(e.touches.length !== 1) return;
+
+  const currentX = e.touches[0].clientX;
+  const currentY = e.touches[0].clientY;
+
+  const diffX = touchStartX - currentX;
+  const diffY = touchStartY - currentY;
+
+  const atLeftEdge = scrollEl.scrollLeft <= 0;
+  const swipingRight = diffX < 0;
+
+  /* 브라우저 뒤로가기 방지 */
+  if(atLeftEdge && swipingRight){
+    e.preventDefault();
+    scrollEl.scrollLeft = 0;
+    return;
+  }
+
+  e.preventDefault();
+
+  /* 가로 이동 */
+  if(Math.abs(diffX) >= Math.abs(diffY)){
+    scrollEl.scrollLeft = touchStartScrollLeft + diffX;
+  }
+  /* 세로 제스처도 가로로 변환 */
+  else{
+    scrollEl.scrollLeft += diffY;
+  }
+
+},{
+  passive:false
+});
+
+
+/* Safari/iOS 뒤로가기 제스처 차단 강화 */
+if(history.scrollRestoration){
+  history.scrollRestoration = "manual";
+}
+
+history.pushState(null, "", location.href);
+
+window.addEventListener("popstate",()=>{
+  history.pushState(null, "", location.href);
+});
 
 window.addEventListener("mousemove",e=>{
   mouseX = e.clientX;
