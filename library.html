@@ -3,748 +3,615 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>서재 탐색 | 한국의 옛 문장부호 아카이브</title>
+<title>내 서재</title>
+
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;500;700;900&family=Noto+Sans+KR:wght@300;400;500;700;900&family=Noto+Serif+JP:wght@400;500;700&display=swap');
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+@font-face {
+  font-family: 'OnulSamhwamyeongjo';
+  src: url('./OnulSamhwamyeongjo-Regular.woff') format('woff');
+  font-weight: 300;
+  font-style: normal;
+}
 
-:root {
-  --bg:        #000000;
-  --fg:        #ffffff;
-  --line:      transparent;
-  --ease:      cubic-bezier(0.76, 0, 0.24, 1);
-  --eout:      cubic-bezier(0.16, 1, 0.3, 1);
-  --dur:       0.85s;
-  --page-l:    #ffffff;
-  --page-r:    #ffffff;
-  --page-ink:  rgba(0,0,0,0.84);
-  --page-mute: rgba(0,0,0,0.38);
-  --page-line: transparent;
+#topbar,
+#home-btn,
+#library-btn{
+  display:none;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 html, body {
+  width: 100%;
   height: 100%;
-  background: var(--bg);
-  color: var(--fg);
-  font-family: "Noto Serif KR", serif;
-  cursor: none;
   overflow: hidden;
-}
-
-#cur {
-  position: fixed; z-index: 99999;
-  width: 8px; height: 8px; border-radius: 50%;
-  background: var(--fg); pointer-events: none;
-  transform: translate(-50%,-50%);
-  transition: width .18s var(--eout), height .18s var(--eout);
-  mix-blend-mode: difference;
-}
-#cur.big { width: 34px; height: 34px; }
-
-#global-toggle {
-  position: fixed; bottom: 20px; right: 20px;
-  z-index: 9000; display: flex;
-  border: 0;
-  overflow: hidden;
-  opacity: 1;
-}
-.gtog-btn {
+  background: #d8d8d800;
+  color: #000;
   font-family: "Noto Serif KR", serif;
-  font-size: .48rem; letter-spacing: .24em; font-weight: 700;
-  color: rgba(255,255,255,0.52); padding: 7px 16px;
-  cursor: none; white-space: nowrap;
-  border: none; background: none; outline: none;
-  transition: background .22s, color .22s;
 }
-.gtog-btn.active { background: var(--fg); color: var(--bg); }
-.gtog-btn + .gtog-btn { border-left: 0; }
-
 
 #app {
-  position: fixed; inset: 0; z-index: 1;
-  display: flex; flex-direction: row;
-  opacity: 1; pointer-events: auto;
-  transition: opacity .5s var(--eout);
+  position: fixed;
+  inset: 0;
 }
-#app.active { opacity: 1; pointer-events: auto; }
 
-#sidebar {
-  width: 40px; flex-shrink: 0;
-  border-right: 0;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: space-between;
-  padding: 18px 0; z-index: 10;
+#topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 0 14px 0 240px;
+  background: rgba(255,255,255,.96);
+  backdrop-filter: blur(10px);
+  z-index: 9999;
+  border-bottom: 1.5px solid #000;
 }
-.sb-text {
-  writing-mode: vertical-rl;
+
+button {
+  appearance: none;
+  -webkit-appearance: none;
+  border: none;
+  border-top: 1.5px solid #595959;
+  border-bottom: 1.5px solid transparent;
+  background: transparent;
+  font-family: 'OnulSamhwamyeongjo', serif;
   font-size: 1rem;
-  letter-spacing: .24em;
-  font-weight: 700;
-  color: rgba(255,255,255,.38);
-  white-space: nowrap;
+  font-weight: 300;
+  letter-spacing: .05em;
+  cursor: pointer;
+}
+
+button:hover,
+button.active {
+  border-bottom: 1.5px solid #595959;
+}
+
+.mode-btn {
+  height: 33px;
+}
+
+#refresh-btn {
+  width: 40px;
+  height: 33px;
+  font-size: 22px;
+  line-height: 1;
+}
+
+#home-btn,
+#library-btn {
+  position: fixed;
+  top: 12px;
+  width: 100px;
+  height: 33px;
+  z-index: 10000;
+}
+
+#home-btn {
+  left: 14px;
+}
+
+#library-btn {
+  left: 122px;
 }
 
 #scroll {
-  flex: 1;
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: row;
   overflow-x: auto;
   overflow-y: hidden;
+  background: #ffffff;
   scrollbar-width: none;
-  scroll-snap-type: none;
-  scroll-behavior: smooth;
 }
-#scroll::-webkit-scrollbar { display: none; }
+
+#scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.empty-message {
+  font-family: 'OnulSamhwamyeongjo', serif;
+  font-size: 1.2rem;
+  letter-spacing: .05em;
+  padding: 32px;
+  color: #ffffff00;
+}
 
 .item-wrapper {
+  position: relative;
   height: 100%;
   flex-shrink: 0;
-  display: grid;
-  scroll-snap-align: end;
-  grid-template-columns: 0fr auto;
-  border-right: 0;
-  transition: grid-template-columns var(--dur) var(--ease);
-}
-.item-wrapper.open { grid-template-columns: 1fr auto; }
-
-.item-detail { overflow: hidden; }
-
-.item-main {
-  display: flex;
-  flex-direction: row;
-  position: relative;
-  cursor: none;
-  overflow: hidden;
-  animation: itemIn .5s var(--eout) both;
-  transform-style: preserve-3d;
-  will-change: transform;
-  transition: transform .28s var(--eout);
-}
-@keyframes itemIn {
-  from { opacity:0; transform: translateX(16px); }
-  to   { opacity:1; transform: translateX(0); }
-}
-.item-main::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: var(--fg);
-  opacity: 0;
-  transition: opacity .55s var(--ease);
-  z-index: 0;
-  pointer-events: none;
-}
-.item-main:hover::before,
-.item-wrapper.open .item-main::before { opacity: 1; }
-
-.item-main:hover .name-text,
-.item-wrapper.open .name-text { color: var(--bg); }
-.item-main:hover .meta-text,
-.item-wrapper.open .meta-text { color: rgba(13,13,13,.55); }
-
-.name-col {
-  position: relative; z-index: 1;
-  display: flex; align-items: center; justify-content: center;
-  padding: 28px 0; flex-shrink: 0;
-  border-left: 0; border-right: 0; overflow: hidden;
-}
-.name-text {
-  writing-mode: vertical-rl;
-  font-weight: 900;
-  letter-spacing: .05em;
-  line-height: 1;
-  white-space: nowrap;
-  color: var(--fg);
-  transition: color .55s var(--ease), transform .45s var(--eout);
-}
-.item-main:hover .name-text { transform: scale(1.035); }
-
-.meta-col {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  width: 26px;
-  flex-shrink: 0;
-}
-.meta-cell {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px 0;
-  overflow: hidden;
-  min-height: 0;
-  border-left: 0;
-  border-bottom: 0;
-}
-.meta-text {
-  writing-mode: vertical-rl;
-  font-size: 1rem;
-  letter-spacing: .12em;
-  font-weight: 800;
-  color: rgb(255,255,255);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-height: 100%;
-  transition: color .5s var(--ease);
-}
-
-.book-spread {
-  height: 100%;
-  display: flex;
-  flex-direction: row;
-  border-right: 0;
-  position: relative;
+  width: 49px;
+  transition: width .6s linear;
   background: #fff;
 }
 
-.page-left {
-  width: 500px;
-  flex: 0 0 500px;
-  background: var(--page-l);
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 36px 28px 48px;
-  z-index: 0;
+.item-wrapper.open {
+  width: 819px;
 }
 
-.page-right {
-  width: 400px;
-  flex: 0 0 400px;
-  min-width: 0;
-  background: var(--page-r);
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  flex-direction: row;
-  align-items: stretch;
-  padding: 0;
-}
-
-.page-gutter {
-  width: 0;
-  flex: 0 0 0;
-  background: transparent;
-  box-shadow: none;
-}
-
-/* 책 페이지 그라데이션/그림자/질감 전부 제거 */
-.page-left::before,
-.page-left::after,
-.page-right::before,
-.page-right::after {
-  content: none !important;
-  display: none !important;
-  background: none !important;
-  box-shadow: none !important;
-}
-
-.left-img-area {
-  flex: 1;
-  width: 100%;
-  min-height: 0;
-  position: relative;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  z-index: 1;
-}
-.page-img {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-  mix-blend-mode: multiply;
-  filter: none;
-  opacity: 0;
-  transform: scale(1.5);
-  transition: opacity .6s .2s var(--eout), transform .6s .2s var(--eout);
-  cursor: zoom-in;
-}
-.item-wrapper.open .page-img { opacity: .95; transform: scale(1); }
-.page-img:hover { opacity: .55 !important; }
-
-.page-num-l {
+.item-main {
   position: absolute;
-  bottom: 16px;
-  right: 20px;
-  font-size: .46rem;
-  letter-spacing: .18em;
-  font-weight: 700;
-  color: var(--page-mute);
-  z-index: 2;
+  top: 0;
+  left: 0;
+  width: 49px;
+  height: 100%;
+  background: #fff;
+  overflow: hidden;
+  z-index: 3;
+  cursor: pointer;
+}
+
+.name-col {
+  width: 49px;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 18px 7px 0;
+}
+
+.name-text {
+  writing-mode: vertical-rl;
+  font-family: "Noto Serif KR", serif;
+  font-size: 26px;
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: .08em;
+}
+
+.jp-comma {
+  font-family: "Noto Serif JP", serif;
+  font-size: .92em;
+  display: inline-block;
+  letter-spacing: -.7em;
+}
+
+.item-detail {
+  position: absolute;
+  top: 0;
+  left: 49px;
+  width: 770px;
+  height: 100%;
+  background: #fff;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  padding-bottom: 300px;
+  border-left: 1.5px solid #828282;
+  border-right: 1.5px solid #838383;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .4s linear, visibility 0s linear .4s;
+}
+
+.item-detail::-webkit-scrollbar {
+  display: none;
+}
+
+.item-wrapper.open .item-detail {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity .4s linear;
+}
+
+.book-spread {
+  width: 770px;
+  min-height: 100%;
+  background: #fff;
+  font-family: "Noto Sans KR", sans-serif;
+}
+
+.page-left {
+  width: 100%;
+  min-height: 100%;
+  display: grid;
+  grid-template-columns: 150px 1fr;
+  gap: 24px;
+  align-items: start;
+  padding: 28px 28px 220px;
+  position: relative;
 }
 
 .info-cols {
-  display: flex;
-  flex-direction: row;
+  width: 150px;
   height: 100%;
-  width: 100%;
-  position: relative;
-  z-index: 1;
-  padding: 0 24px;
-  gap: 0;
-  align-items: stretch;
-}
-.info-col {
   display: flex;
   flex-direction: column;
-  border-right: 0;
-  padding: 37px 0;
-  flex: 0 0 27px;
-  min-width: 0;
-  opacity: 0;
-  transform: translateX(14px);
-  transition: opacity .45s var(--eout), transform .45s var(--eout);
+  gap: 9px;
+  position: relative;
 }
-.item-wrapper.open .info-col { opacity: 1; transform: translateX(0); }
-.item-wrapper.open .info-col:nth-child(1) { transition-delay: .22s; }
-.item-wrapper.open .info-col:nth-child(2) { transition-delay: .30s; }
-.item-wrapper.open .info-col:nth-child(3) { transition-delay: .38s; }
-.item-wrapper.open .info-col:nth-child(4) { transition-delay: .46s; }
-.item-wrapper.open .info-col:nth-child(5) { transition-delay: .54s; }
-.item-wrapper.open .info-col:nth-child(6) { transition-delay: .62s; }
+
+.info-cols::before {
+  content: "";
+  position: absolute;
+  top: -10px;
+  left: -6px;
+  width: 720px;
+  height: 2px;
+  background: #767676;
+}
+
+.info-col,
+.image-description-wrap,
+.page-img {
+  opacity: 0;
+  transition: opacity .35s linear;
+}
+
+.item-wrapper.open .info-col,
+.item-wrapper.open .image-description-wrap,
+.item-wrapper.open .page-img {
+  opacity: 1;
+  transition-delay: .35s;
+}
+
+.info-col {
+  display: grid;
+  grid-template-columns: 42px 1fr;
+  gap: 10px;
+  align-items: start;
+}
+
+.info-label,
+.info-value {
+  font-family: "Noto Sans KR", sans-serif;
+  font-size: .72rem;
+  font-weight: 400;
+  line-height: 1.55;
+  letter-spacing: .04em;
+  word-break: break-all;
+}
 
 .info-label {
-  writing-mode: vertical-rl;
-  font-size: 1.2rem;
-  letter-spacing: .2em;
-  font-weight: 900;
-  color: var(--page-ink);
-  border-bottom: 0;
-  padding-bottom: 10px;
-  margin-bottom: 20px;
-  white-space: nowrap;
-  height: 100px;
-}
-.info-value {
-  writing-mode: vertical-rl;
-  font-size: 1.2rem;
-  letter-spacing: .23em;
-  font-weight: 800;
-  color: var(--page-ink);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-height: 100%;
-  line-height: 1;
+  transform: translateX(-6px);
 }
 
-.page-num-r {
-  position: absolute;
-  bottom: 16px;
-  left: 20px;
-  font-size: .46rem;
-  letter-spacing: .18em;
-  font-weight: 700;
-  color: var(--page-mute);
-  z-index: 2;
+.image-area {
+  display: flex;
+  justify-content: flex-end;
 }
 
-#zoom {
-  position: fixed;
-  inset: 0;
-  z-index: 99999;
-  background: rgba(0,0,0,.96);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: none;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity .3s, visibility .3s;
-}
-#zoom.on { opacity: 1; visibility: visible; }
-#zoom img { max-width: 85vw; max-height: 85vh; object-fit: contain; transform: scale(.93); transition: transform .4s var(--eout); }
-#zoom.on img { transform: scale(1); }
-#zoom-x {
-  position: fixed;
-  top: 0;
-  right: 0;
-  width: 40px;
-  height: 40px;
-  border-left: 0;
-  border-bottom: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: .52rem;
-  font-weight: 900;
-  color: rgba(255,255,255,.45);
-  cursor: none;
-  transition: color .15s, background .15s;
-}
-#zoom-x:hover { color: var(--fg); background: rgba(255,255,255,.08); }
-
-#preview {
-  position: fixed;
-  pointer-events: none;
-  z-index: 5000;
-  display: flex;
-  gap: 10px;
-  opacity: 0;
-  transition: opacity .2s;
-}
-#preview.show { opacity: 1; }
-#prev-book, #prev-sym {
-  width: 120px;
-  height: 165px;
+.page-img {
+  width: 480px;
+  height: 400px;
+  transform: translateY(5px);
   object-fit: cover;
-  border: 0;
-  display: block;
-  background: #111;
+  filter: grayscale(1) contrast(1.12) brightness(.92) saturate(0) sepia(.08);
 }
 
+.image-description-wrap {
+  position: absolute;
+  left: -5px;
+  top: 450px;
+  width: 720px;
+  display: grid;
+  grid-template-columns: 340px 340px;
+  gap: 40px;
+  align-items: start;
+  line-height: 2;
+  border-top: 2px solid #818181;
+  border-bottom: 2px solid #767676;
+  padding-top: 4px;
+  padding-bottom: 6px;
+}
+
+.image-description-wrap::before {
+  content: "한글 설명";
+  position: absolute;
+  left: 0;
+  bottom: 100%;
+  width: 380px;
+  height: 22px;
+  transform: translateY(-8px);
+  border-top: 2px solid #818181;
+  font-size: .8rem;
+}
+
+.image-description-wrap::after {
+  content: "English Description";
+  position: absolute;
+  left: 380px;
+  bottom: 100%;
+  width: 340px;
+  height: 22px;
+  transform: translateY(-8px);
+  border-top: 2px solid #818181;
+  font-size: .9rem;
+}
+
+.image-description,
+.image-description-en {
+  width: 340px;
+  max-width: 340px;
+  color: #000;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.image-description {
+  font-family: "Noto Sans KR", sans-serif;
+  font-size: .9rem;
+  line-height: 2;
+  letter-spacing: .05em;
+}
+
+.image-description-en {
+  font-family: "Helvetica Neue", Arial, sans-serif;
+  font-size: 1rem;
+  line-height: 1.6;
+  letter-spacing: .03em;
+}
 </style>
 </head>
+
 <body>
+<div id="app">
 
-<div id="cur"></div>
-
-<div id="global-toggle">
-  <button class="gtog-btn active" id="gtog-book" onclick="setGlobalMode('book')">책</button>
-  <button class="gtog-btn" id="gtog-sym" onclick="setGlobalMode('sym')">문장부호</button>
-</div>
-
-<div id="app" class="active">
-  <div id="sidebar">
-    <div class="sb-text">한국의 옛 문장부호 아카이브</div>
-    <div class="sb-text" id="sb-count">—</div>
-  </div>
   <div id="scroll"></div>
 </div>
 
-  <div class="sym-big">입장하기</div>
-  <div class="sym-sub">문장부호 탐색은 현재 제작 중입니다</div>
-</div>
-
-<div id="zoom" onclick="closeZoom()">
-  <div id="zoom-x">✕</div>
-  <img id="zoom-img" src="" alt="" />
-</div>
-
-<div id="preview">
-  <img id="prev-book" src="" alt="" />
-  <img id="prev-sym" src="" alt="" />
-</div>
-
 <script>
-const SPREADSHEET_ID = "1lgA52QAg3-tIM07LVgSJVRmOwjbXmUeWfJ1xou-IE2Y";
-const GID = "2070526780";
-const CSV_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/export?format=csv&gid=${GID}`;
-const K = { name:"이름", cat:"분류", period:"시대", paper:"종이", size:"크기", coll:"소장처", img:"UL-Images", sym:"UL-Punctuation" };
+const K = {
+  no: "번호",
+  name: "이름",
+  cat: "분류",
+  period: "시대",
+  paper: "종이",
+  size: "크기",
+  coll: "소장처",
+  caption: "caption",
+  captionEn: "caption-en",
+  punctImg: "UL-Punctuation",
+  bookImg: "UL-Images"
+};
 
-function parseCSV(t) {
-  const ln = t.trim().split("\n");
-  const hd = sp(ln[0]);
-  return ln.slice(1).map(l => {
-    const v = sp(l), o = {};
-    hd.forEach((h, i) => o[h.trim()] = (v[i] || "").trim());
-    return o;
-  });
+const LIBRARY_STORAGE_KEY = "myLibraryBooks";
+
+let currentMode = "punct";
+let allRows = [];
+let allWrappers = [];
+let openIdx = -1;
+
+function getBookId(row) {
+  return [row[K.no], row[K.name], row[K.period]].filter(Boolean).join("|");
 }
-function sp(l) {
-  const r = [];
-  let c = "", q = false;
-  for (const ch of l) {
-    if (ch === '"') q = !q;
-    else if (ch === ',' && !q) { r.push(c); c = ""; }
-    else c += ch;
+
+function getLibraryBooks() {
+  try {
+    return JSON.parse(localStorage.getItem(LIBRARY_STORAGE_KEY) || "[]");
+  } catch (e) {
+    console.error(e);
+    return [];
   }
-  r.push(c);
-  return r;
 }
 
-const cur = document.getElementById("cur");
-let mx = 0, my = 0;
-let lastMouseX = 0, lastMouseY = 0;
-let mouseVX = 0, mouseVY = 0;
+function shuffleArray(arr) {
+  const a = [...arr];
 
-document.addEventListener("mousemove", e => {
-  mouseVX = e.clientX - lastMouseX;
-  mouseVY = e.clientY - lastMouseY;
-  lastMouseX = e.clientX;
-  lastMouseY = e.clientY;
-  mx = e.clientX;
-  my = e.clientY;
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
 
-  cur.style.left = mx + "px";
-  cur.style.top = my + "px";
-  cur.classList.toggle("big", !!e.target.closest(".item-main,#zoom-x,.gtog-btn"));
-
-  const book = e.target.closest(".item-main");
-  if (book && !book.closest(".item-wrapper.open")) tiltBook(book, e);
-  movePreview();
-});
-
-document.addEventListener("mouseleave", () => {
-  document.querySelectorAll(".item-main").forEach(el => el.style.transform = "");
-});
-
-function tiltBook(book, e) {
-  const rect = book.getBoundingClientRect();
-  const centerX = rect.left + rect.width / 2;
-  const centerY = rect.top + rect.height / 2;
-  const dx = (e.clientX - centerX) / Math.max(rect.width, 1);
-  const dy = (e.clientY - centerY) / Math.max(rect.height, 1);
-  const push = Math.max(-1, Math.min(1, mouseVX / 26));
-  const rotateY = dx * 12 + push * 10;
-  const rotateX = -dy * 4;
-  const skew = Math.max(-5, Math.min(5, mouseVX / 10));
-  book.style.transform = `perspective(900px) rotateY(${rotateY}deg) rotateX(${rotateX}deg) skewY(${skew}deg)`;
+  return a;
 }
 
+function getCurrentImage(row) {
+  if (currentMode === "book") {
+    return row[K.bookImg] || row[K.punctImg] || "";
+  }
 
-
-const preview = document.getElementById("preview");
-function movePreview() {
-  if (!preview.classList.contains("show")) return;
-  let x = mx + 20, y = my - 14;
-  if (x + 260 > window.innerWidth) x = mx - 270;
-  if (y + 170 > window.innerHeight) y = my - 172;
-  preview.style.left = x + "px";
-  preview.style.top = y + "px";
+  return row[K.punctImg] || "";
 }
-function showPreview(row) {
-  if (openIdx >= 0) return;
-  const src = globalMode === "book" ? row[K.img] : row[K.sym];
-  document.getElementById("prev-book").src = src || "";
-  document.getElementById("prev-sym").src = src || "";
-  preview.classList.add("show");
+
+function formatTitle(title) {
+  return String(title || "")
+    .replaceAll(",", '<span class="jp-comma">、</span>')
+    .replaceAll("、", '<span class="jp-comma">、</span>')
+    .replaceAll("。", '<span class="jp-comma">。</span>');
 }
-function hidePreview() { preview.classList.remove("show"); }
 
-let globalMode = "book";
-let allRows = [], allWrappers = [], allImgs = [], openIdx = -1;
+function createInfoCol(label, value) {
+  if (!value) return null;
 
-function setGlobalMode(m) {
-  globalMode = m;
-  document.getElementById("gtog-book").classList.toggle("active", m === "book");
-  document.getElementById("gtog-sym").classList.toggle("active", m === "sym");
-  allRows.forEach((row, idx) => {
-    const img = allImgs[idx];
-    if (!img) return;
-    const src = m === "book" ? row[K.img] : row[K.sym];
-    img.src = src || "";
-  });
+  const col = document.createElement("div");
+  col.className = "info-col";
+
+  const lbl = document.createElement("div");
+  lbl.className = "info-label";
+  lbl.textContent = label;
+
+  const val = document.createElement("div");
+  val.className = "info-value";
+  val.textContent = value;
+
+  col.appendChild(lbl);
+  col.appendChild(val);
+
+  return col;
 }
 
 function buildList(rows) {
-  allRows = rows.filter(r => r[K.name] && r[K.img]);
-  document.getElementById("sb-count").textContent = allRows.length + "점";
+  allRows = shuffleArray(rows.filter(row => row[K.name]));
+
   const scroll = document.getElementById("scroll");
+  scroll.innerHTML = "";
+
+
+  allWrappers = [];
+  openIdx = -1;
 
   allRows.forEach((row, idx) => {
-    const name = row[K.name] || "";
-    const h = window.innerHeight;
-    const maxFont = 200;
-    const fs = Math.min(maxFont, Math.max(16, Math.min(h * .88 / Math.max(name.length, 1), h * .85)));
-    const nw = Math.round(fs * 1.1 + 18);
-
-    const available = Math.max(520, window.innerWidth - 40 - nw);
-    const leftPageW = Math.min(500, Math.floor(available * .56));
-    const rightPageW = Math.max(220, Math.floor(available - leftPageW));
-    const spreadW = leftPageW + rightPageW;
-
     const wrapper = document.createElement("div");
     wrapper.className = "item-wrapper";
 
     const main = document.createElement("div");
     main.className = "item-main";
-    main.style.animationDelay = Math.min(idx * 20, 400) + "ms";
-    main.addEventListener("mouseleave", () => { main.style.transform = ""; });
-    main.addEventListener("mouseenter", () => showPreview(row));
-    main.addEventListener("mouseleave", hidePreview);
 
-    const nc = document.createElement("div");
-    nc.className = "name-col";
-    nc.style.width = nw + "px";
+    const nameCol = document.createElement("div");
+    nameCol.className = "name-col";
 
-    const nt = document.createElement("span");
-    nt.className = "name-text";
-    nt.style.fontSize = Math.round(fs) + "px";
-    nt.textContent = name;
-    nc.appendChild(nt);
+    const nameText = document.createElement("span");
+    nameText.className = "name-text";
+    nameText.innerHTML = formatTitle(row[K.name]);
 
-    const mc = document.createElement("div");
-    mc.className = "meta-col";
+    nameCol.appendChild(nameText);
+    main.appendChild(nameCol);
 
-    [row[K.cat], row[K.period], row[K.coll]].filter(Boolean).forEach(v => {
-      const cc = document.createElement("div");
-      cc.className = "meta-cell";
-      const t = document.createElement("span");
-      t.className = "meta-text";
-      t.textContent = v;
-      cc.appendChild(t);
-      mc.appendChild(cc);
+    main.addEventListener("click", () => {
+      toggleItem(idx);
     });
-
-    main.appendChild(nc);
-    main.appendChild(mc);
 
     const detail = document.createElement("div");
     detail.className = "item-detail";
 
     const spread = document.createElement("div");
     spread.className = "book-spread";
-    spread.style.minWidth = spreadW + "px";
 
-    const pageL = document.createElement("div");
-    pageL.className = "page-left";
-    pageL.style.width = leftPageW + "px";
-    pageL.style.flex = `0 0 ${leftPageW}px`;
-
-    const leftArea = document.createElement("div");
-    leftArea.className = "left-img-area";
-
-    const img = document.createElement("img");
-    img.className = "page-img";
-    img.src = row[K.img] || "";
-    img.alt = "";
-    img.addEventListener("click", e => { e.stopPropagation(); openZoom(img.src); });
-    leftArea.appendChild(img);
-    allImgs.push(img);
-
-    const pageNumL = document.createElement("span");
-    pageNumL.className = "page-num-l";
-    pageNumL.textContent = "ⅰ";
-
-    pageL.appendChild(leftArea);
-    pageL.appendChild(pageNumL);
-
-    const gutter = document.createElement("div");
-    gutter.className = "page-gutter";
-
-    const pageR = document.createElement("div");
-    pageR.className = "page-right";
-    pageR.style.width = rightPageW + "px";
-    pageR.style.flex = `0 0 ${rightPageW}px`;
+    const pageLeft = document.createElement("div");
+    pageLeft.className = "page-left";
 
     const infoCols = document.createElement("div");
     infoCols.className = "info-cols";
 
-    const fields = [
-      { key: K.name,   label: "이름",   cls: "col-name" },
-      { key: K.period, label: "시대",   cls: "" },
-      { key: K.cat,    label: "분류",   cls: "" },
-      { key: K.coll,   label: "소장처", cls: "" },
-      { key: K.paper,  label: "종이",   cls: "" },
-      { key: K.size,   label: "크기",   cls: "" },
-    ].filter(f => row[f.key]);
-
-    fields.forEach(f => {
-      const col = document.createElement("div");
-      col.className = "info-col" + (f.cls ? " " + f.cls : "");
-
-      const lbl = document.createElement("div");
-      lbl.className = "info-label";
-      lbl.textContent = f.label;
-
-      const val = document.createElement("div");
-      val.className = "info-value";
-      val.textContent = row[f.key];
-
-      col.appendChild(lbl);
-      col.appendChild(val);
-      infoCols.appendChild(col);
+    [
+      { key: K.no, label: "번호" },
+      { key: K.name, label: "이름" },
+      { key: K.period, label: "시대" },
+      { key: K.cat, label: "분류" },
+      { key: K.coll, label: "소장처" },
+      { key: K.paper, label: "종이" },
+      { key: K.size, label: "크기" }
+    ].forEach(item => {
+      const col = createInfoCol(item.label, row[item.key]);
+      if (col) infoCols.appendChild(col);
     });
 
-    const pageNumR = document.createElement("span");
-    pageNumR.className = "page-num-r";
-    pageNumR.textContent = idx + 1;
+    const captionKr = (row[K.caption] || "").trim();
+    const captionEn = (row[K.captionEn] || "").trim();
 
-    pageR.appendChild(infoCols);
-    pageR.appendChild(pageNumR);
+    if (captionKr || captionEn) {
+      const descWrap = document.createElement("div");
+      descWrap.className = "image-description-wrap";
 
-    spread.appendChild(pageL);
-    spread.appendChild(gutter);
-    spread.appendChild(pageR);
+      const descKr = document.createElement("div");
+      descKr.className = "image-description";
+      descKr.textContent = captionKr;
+
+      const descEn = document.createElement("div");
+      descEn.className = "image-description-en";
+      descEn.textContent = captionEn;
+
+      descWrap.appendChild(descKr);
+      descWrap.appendChild(descEn);
+      infoCols.appendChild(descWrap);
+    }
+
+    const imageArea = document.createElement("div");
+    imageArea.className = "image-area";
+
+    const img = document.createElement("img");
+    img.className = "page-img";
+    img.alt = row[K.name] || "";
+
+    imageArea.appendChild(img);
+
+    pageLeft.appendChild(infoCols);
+    pageLeft.appendChild(imageArea);
+
+    spread.appendChild(pageLeft);
     detail.appendChild(spread);
 
-    wrapper.appendChild(detail);
     wrapper.appendChild(main);
-
-    main.addEventListener("click", () => toggleItem(idx));
+    wrapper.appendChild(detail);
 
     scroll.appendChild(wrapper);
+
     allWrappers.push(wrapper);
   });
-}
-
-function keepBookInsideRight(wrapper) {
-  const scroll = document.getElementById("scroll");
-  const main = wrapper.querySelector(".item-main");
-  if (!main) return;
-
-  const scrollRect = scroll.getBoundingClientRect();
-  const mainRect = main.getBoundingClientRect();
-  const gap = mainRect.right - scrollRect.right;
-  const maxScroll = scroll.scrollWidth - scroll.clientWidth;
-  const nextLeft = Math.max(0, Math.min(maxScroll, scroll.scrollLeft + gap));
-
-  scroll.scrollTo({ left: nextLeft, behavior: "smooth" });
 }
 
 function toggleItem(idx) {
   const wrapper = allWrappers[idx];
   const isOpen = wrapper.classList.contains("open");
 
-  if (openIdx >= 0 && openIdx !== idx) allWrappers[openIdx].classList.remove("open");
+  if (openIdx >= 0 && openIdx !== idx) {
+    closeItem(openIdx);
+  }
 
   if (isOpen) {
-    wrapper.classList.remove("open");
+    closeItem(idx);
     openIdx = -1;
-  } else {
-    wrapper.classList.add("open");
-    openIdx = idx;
-    hidePreview();
-
-    requestAnimationFrame(() => keepBookInsideRight(wrapper));
-    setTimeout(() => keepBookInsideRight(wrapper), 220);
-    setTimeout(() => keepBookInsideRight(wrapper), 520);
-    setTimeout(() => keepBookInsideRight(wrapper), 880);
+    return;
   }
+
+  wrapper.classList.add("open");
+
+  const img = wrapper.querySelector(".page-img");
+  const src = getCurrentImage(allRows[idx]);
+
+  if (src) {
+    img.src = src;
+  }
+
+  openIdx = idx;
 }
 
-function openZoom(src) {
-  if (!src) return;
-  document.getElementById("zoom-img").src = src;
-  document.getElementById("zoom").classList.add("on");
-}
-function closeZoom() {
-  document.getElementById("zoom").classList.remove("on");
-}
+function closeItem(idx) {
+  const wrapper = allWrappers[idx];
+  const img = wrapper.querySelector(".page-img");
 
-document.addEventListener("keydown", e => {
-  if (e.key === "Escape") {
-    if (document.getElementById("zoom").classList.contains("on")) closeZoom();
-    else if (openIdx >= 0) {
-      allWrappers[openIdx].classList.remove("open");
-      openIdx = -1;
+  wrapper.classList.remove("open");
+
+  setTimeout(() => {
+    if (!wrapper.classList.contains("open")) {
+      img.src = "";
     }
-  }
+  }, 500);
+}
 
-  if (openIdx >= 0 && allRows.length) {
-    if (e.key === "ArrowRight" || e.key === "ArrowDown") toggleItem((openIdx + 1) % allRows.length);
-    if (e.key === "ArrowLeft" || e.key === "ArrowUp") toggleItem((openIdx - 1 + allRows.length) % allRows.length);
-  }
+document.querySelectorAll(".mode-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".mode-btn").forEach(b => {
+      b.classList.remove("active");
+    });
+
+    btn.classList.add("active");
+    currentMode = btn.dataset.mode;
+
+    if (openIdx >= 0) {
+      const img = allWrappers[openIdx].querySelector(".page-img");
+      img.src = getCurrentImage(allRows[openIdx]);
+    }
+  });
 });
 
-window.addEventListener("resize", () => {
-  if (openIdx >= 0) keepBookInsideRight(allWrappers[openIdx]);
-});
 
-fetch(CSV_URL)
-  .then(r => { if (!r.ok) throw r; return r.text(); })
-  .then(t => buildList(parseCSV(t)))
-  .catch(() => { document.getElementById("sb-count").textContent = "오류"; });
+const savedRows = getLibraryBooks();
 
+if (savedRows.length) {
+  buildList(savedRows);
+} else {
+  const scroll = document.getElementById("scroll");
+  scroll.style.background = "#d8d8d8";
+  scroll.innerHTML = `
+    <div class="empty-message">
+      아직 내 서재에 저장한 책이 없습니다.
+    </div>
+  `;
+}
 </script>
 </body>
 </html>
