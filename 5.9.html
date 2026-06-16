@@ -350,7 +350,7 @@ body{cursor:none;}
   position:relative;
   height:100%;
   flex-shrink:0;
-  width:49px;
+  width:40px;
   transition:width .6s linear;
   margin-right:-1px;
 }
@@ -370,7 +370,7 @@ body{cursor:none;}
   position:absolute;
   top:0;
 
-  left:49px;
+  left:40px;
   right:auto;
 
   width:770px;
@@ -387,7 +387,7 @@ body{cursor:none;}
   border-left:1.5px solid #828282;
   border-right:1.5px solid #838383;
 
-  transform:translateX(-49px); /* 중요 */
+  transform:translateX(-40px); /* 중요 */
   opacity:1;
   visibility:hidden;
 
@@ -443,7 +443,7 @@ body{cursor:none;}
   top:0;
   left:0;
   right:auto;
-  width:49px;
+  width:40px;
   height:100%;
   background:#dedede;
 }
@@ -458,7 +458,7 @@ body{cursor:none;}
   z-index:4;
   cursor:pointer;
 }
-.item-wrapper.open .hover-zone{width:49px;}
+.item-wrapper.open .hover-zone{width:40px;}
 
 .spine-mark{
   position:absolute;
@@ -494,7 +494,7 @@ body{cursor:none;}
 .name-col{
   position:relative;
   z-index:2;
-  width:49px;height:100%;
+  width:40px;height:100%;
   display:flex;justify-content:center;align-items:flex-start;
   padding:18px 7px 0 7px;
 }
@@ -503,7 +503,7 @@ body{cursor:none;}
   font-size:34px;
   font-weight:400;
   line-height:1.2;
-  letter-spacing:.08em;
+  letter-spacing:.14em;
   font-family:"Noto Serif KR",serif;
 }
 
@@ -606,12 +606,12 @@ body{cursor:none;}
   writing-mode:horizontal-tb;
   text-orientation:mixed;
   font-family:'SM3Gothic', sans-serif;
-  font-size:.8rem;
+  font-size:.84rem;
   font-weight:300;
   line-height:1.6;
   margin:0;
   padding:0;
-  letter-spacing:.0em;
+  letter-spacing:-.03em;
   white-space:normal;
   overflow-wrap:anywhere;
   word-break:break-all;
@@ -713,14 +713,15 @@ body{cursor:none;}
 .image-description{
   font-family:'SM3Gothic', sans-serif;
   font-size:0.9rem;
-  line-height:2.0;
-  letter-spacing:0.0em;
+  line-height:1.8;
+  letter-spacing:-.03em;
 }
 
 .image-description-en{
   font-family:"Helvetica Neue", Arial, sans-serif;
   font-size:1rem;
-  line-height:1.6;
+  line-height:1.5;
+  font-weight: 300;
   letter-spacing:0.03em;
 }
 
@@ -792,7 +793,7 @@ body{cursor:none;}
   }
 
   .item-wrapper{
-  width:49px;
+  width:40px;
 }
 
 .item-wrapper.open{
@@ -957,6 +958,18 @@ body{cursor:none;}
     letter-spacing:.03em !important;
   }
 
+  .item-wrapper.open .name-text .glyph-num{
+    font-size:1.3em !important;
+    position:relative;
+    top:0.12em;
+  }
+
+  .item-wrapper.open .name-text .glyph-zero{
+    font-size:1.08em !important;
+    position:relative;
+    top:0em;
+  }
+
   .item-wrapper.open .item-detail{
     display:block !important;
     position:relative !important;
@@ -1032,7 +1045,7 @@ body{cursor:none;}
 
     display:grid !important;
     grid-template-columns:89mm 93mm !important;
-    gap:12mm !important;
+    gap:2mm !important;
 
     margin-top:5mm !important;
     border-top:none !important;
@@ -1057,21 +1070,53 @@ body{cursor:none;}
     .info-label,
   .info-value{
     font-size:1.4rem !important;
-    line-height:1.6 !important;
-    font-weight: 400;
-    letter-spacing:0.4mm;
+    line-height:1.35 !important;
+    font-weight:500;
+    letter-spacing:0.2mm;
   }
 
   .image-description{
-    font-size:1.28rem !important;
-    line-height:2.1 !important;
-    letter-spacing: 0.1mm;
+    font-size:1.15rem !important;
+    line-height:1.8 !important;
+    letter-spacing: 0mm;
   }
 
   .image-description-en{
     font-size:1.33rem !important;
-    line-height:1.6 !important;
+    line-height:1.5 !important;
+    font-weight:300;
     letter-spacing: 0.1mm;
+  }
+
+  @media print{
+    #sidebar,
+    #topbar,
+    #cursor,
+    #content-frame{
+      display:none !important;
+    }
+
+    #app{
+      position:static !important;
+      width:100% !important;
+      height:auto !important;
+    }
+
+    #scroll{
+      position:static !important;
+      left:0 !important;
+      top:0 !important;
+      width:100% !important;
+      height:auto !important;
+      padding:0 !important;
+      overflow:visible !important;
+      background:#fff !important;
+    }
+
+    .info-page{
+      min-width:0 !important;
+      width:100% !important;
+    }
   }
 
 }
@@ -1201,7 +1246,7 @@ const K = {
 };
 
 let currentMode = "punct";
-const FONT_SIZE = 26;
+const FONT_SIZE = 22;
 
 let allRows = [];
 let allWrappers = [];
@@ -2015,12 +2060,24 @@ function saveAllPagesAsPDF(){
 
   screenRowsBeforePrint = [...allRows];
 
-  const printRows = [...allRows].sort((a, b) =>
-    (a[K.name] || "").localeCompare(
+  const categoryOrder = ["괄호", "권표", "구두"];
+
+  const printRows = [...allRows].sort((a, b) => {
+    const catA = a[K.cat] || "";
+    const catB = b[K.cat] || "";
+
+    const idxA = categoryOrder.findIndex(cat => catA.includes(cat));
+    const idxB = categoryOrder.findIndex(cat => catB.includes(cat));
+
+    if(idxA !== idxB){
+      return idxA - idxB;
+    }
+
+    return (a[K.name] || "").localeCompare(
       b[K.name] || "",
       "ko-KR"
-    )
-  );
+    );
+  });
 
   buildList(printRows, false);
   preparePrintLayout();
@@ -2038,7 +2095,7 @@ function saveAllPagesAsPDF(){
     const titleEl = wrapper.querySelector(".name-text");
     const title = (allRows[i][K.name] || "").replace(/\s*\([^)]*\)/g, "");
 
-    titleEl.innerHTML = formatTitleForHTML(`${i + 1}. ${title}`);
+    titleEl.innerHTML = `${toGlyphNumber(i + 1)} ${formatTitleForHTML(title)}`;
   });
 
   setTimeout(() => {
